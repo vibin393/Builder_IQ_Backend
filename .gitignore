@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test / type / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment (never commit real env; the .example is kept)
+.env
+.env.*
+!.env.example
+
+# Private keys and secrets — NEVER commit
+*.pem
+*.key
+*.crt
+
+# Logs
+*.log
+
+# User uploads and local data
+uploads/
+*.sqlite3
+*.dump
+postgres-data/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
