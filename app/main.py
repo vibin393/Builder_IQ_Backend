@@ -1,4 +1,4 @@
-"""Corman PMT API entrypoint."""
+"""Corman CMS API entrypoint."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager

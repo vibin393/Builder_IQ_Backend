@@ -1,7 +1,7 @@
 [project]
-name = "corman-pmt-backend"
+name = "corman-cms-backend"
 version = "0.1.0"
-description = "Corman PMT - homebuilder platform API"
+description = "Corman CMS - homebuilder platform API"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
