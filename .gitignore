@@ -51,3 +51,4 @@ scripts/seed_*.py
 scripts/topup_demo_leads.py
 pyproject.toml
 scripts/demo_seed.py
+Dockerfile

@@ -81,7 +81,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 def require_roles(*roles: UserRole):
     """Dependency factory guarding an endpoint by role."""
 
-    async def _guard(user: CurrentUser) -> User:
+    def _guard(user: CurrentUser) -> User:
         if user.role not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

@@ -156,7 +156,7 @@ class DirectoryService:
 
     async def summary(self) -> dict:
         all_contacts = await self.list_contacts()
-        counts = {t: 0 for t in _TYPES}
+        counts = dict.fromkeys(_TYPES, 0)
         for c in all_contacts:
             counts[c.type] += 1
         return {
