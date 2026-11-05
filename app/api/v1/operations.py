@@ -95,6 +95,9 @@ async def create_change_order(
         responsible_party=payload.responsible_party,
         price_delta=payload.price_delta,
         schedule_days=payload.schedule_days,
+        approval_deadline=payload.approval_deadline,
+        client_notes=payload.client_notes,
+        internal_notes=payload.internal_notes,
         status=ChangeOrderStatus.PENDING_APPROVAL,
         requested_by_id=user.id,
     )
@@ -270,9 +273,7 @@ async def list_invoices(
 
 
 @inv_router.post("", response_model=InvoiceRead, status_code=status.HTTP_201_CREATED)
-async def create_invoice(
-    payload: InvoiceCreate, db: DbSession, user: RequirePurchasing
-):
+async def create_invoice(payload: InvoiceCreate, db: DbSession, user: RequirePurchasing):
     """Receive a vendor invoice against a PO. Job and vendor are taken from the PO."""
     po = await get_tenant_scoped(db, PurchaseOrder, user.tenant_id, payload.purchase_order_id)
     # An invoice is billed against a commitment. A draft commits nothing and a void PO

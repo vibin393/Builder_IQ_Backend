@@ -19,7 +19,7 @@ from app.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 class InvoiceStatus(StrEnum):
     RECEIVED = "received"
-    APPROVED = "approved"   # counts as actual cost
+    APPROVED = "approved"  # counts as actual cost
     PAID = "paid"
     DISPUTED = "disputed"
     VOID = "void"
@@ -36,17 +36,23 @@ class Invoice(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     invoice_number: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     # Matched against a PO. Unmatched invoices are the classic leak, so this is required.
     purchase_order_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("purchase_orders.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
 
     status: Mapped[InvoiceStatus] = mapped_column(
@@ -91,7 +97,7 @@ class Invoice(UUIDMixin, TenantMixin, TimestampMixin, Base):
     paid_by_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
     )
-    payment_reference: Mapped[str | None] = mapped_column(String(120))   # BACS ref, cheque no.
+    payment_reference: Mapped[str | None] = mapped_column(String(120))  # BACS ref, cheque no.
     lien_waiver_date: Mapped[date | None] = mapped_column(Date)
     disputed_on: Mapped[date | None] = mapped_column(Date)
     dispute_reason: Mapped[str | None] = mapped_column(String(1000))
@@ -100,15 +106,18 @@ class Invoice(UUIDMixin, TenantMixin, TimestampMixin, Base):
     # Set when the batch is built, cleared if it is voided. Never set twice, so no
     # invoice, payment or retention release reaches the ledger more than once.
     export_batch_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
+        Uuid(as_uuid=True),
+        ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
         index=True,
     )
     payment_batch_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
+        Uuid(as_uuid=True),
+        ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
         index=True,
     )
     retention_batch_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
+        Uuid(as_uuid=True),
+        ForeignKey("accounting_export_batches.id", ondelete="SET NULL"),
         index=True,
     )
 
@@ -153,9 +162,7 @@ class Invoice(UUIDMixin, TenantMixin, TimestampMixin, Base):
     def is_overdue(self) -> bool:
         """Approved, past its due date, and still not paid — owed and late."""
         return bool(
-            self.status is InvoiceStatus.APPROVED
-            and self.due_date
-            and self.due_date < date.today()
+            self.status is InvoiceStatus.APPROVED and self.due_date and self.due_date < date.today()
         )
 
     @property
@@ -176,12 +183,16 @@ class InvoiceLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "invoice_lines"
 
     invoice_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("invoices.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     # The purchase-order line being billed against. The PO lines are the schedule
     # of values: a trade on a long scope bills a portion of a line at a time, and

@@ -47,6 +47,7 @@ from app.models.compliance import (
 )
 from app.models.contract import Buyer, Contract, ContractStatus
 from app.models.cost_code import CostCode
+from app.models.cost_inbox import CostInboxItem, CostInboxStatus
 from app.models.crm import (
     ActivityOutcome,
     ActivityType,
@@ -70,6 +71,12 @@ from app.models.drawings import (
     Transmittal,
     TransmittalPurpose,
     TransmittalRecipient,
+)
+from app.models.estimate import (
+    ClientUpdate,
+    Estimate,
+    EstimateItem,
+    EstimateStatus,
 )
 from app.models.field import (
     DailyLog,
@@ -96,13 +103,31 @@ from app.models.land import (
     ObligationStatus,
     PlanningStatus,
 )
+from app.models.lead_proposal import (
+    LeadProposal,
+    LeadProposalStatus,
+    ProposalItem,
+    ProposalTemplate,
+    ProposalTemplateItem,
+)
 from app.models.marketing import Campaign, CampaignStatus, Survey, SurveyStage, SurveyStatus
+from app.models.messaging import Comment, Message, MessageRecipient
 from app.models.option import (
     Option,
     OptionCategory,
     OptionCostLine,
     OptionPlan,
     OptionPriceChange,
+)
+from app.models.owner_invoice import (
+    OPEN_STATUSES as OWNER_OPEN_STATUSES,
+)
+from app.models.owner_invoice import (
+    OwnerInvoice,
+    OwnerInvoiceKind,
+    OwnerInvoiceLine,
+    OwnerInvoiceStatus,
+    OwnerPayment,
 )
 from app.models.plan import (
     GarageType,
@@ -145,13 +170,24 @@ from app.models.schedule import (
     TaskStatus,
 )
 from app.models.scorecard import ScorecardSettings, ScorecardSnapshot
-from app.models.selection import Selection, SelectionStatus
+from app.models.selection import (
+    Selection,
+    SelectionApprovalStatus,
+    SelectionChoice,
+    SelectionStatus,
+)
 from app.models.submittal import (
     SubmittalActivity,
     SubmittalActivityKind,
     SubmittalRevision,
 )
 from app.models.tenant import Tenant
+from app.models.timeclock import (
+    OutOfBoundsStatus,
+    Shift,
+    ShiftStatus,
+    ShiftType,
+)
 from app.models.user import User, UserRole
 from app.models.vendor import Vendor, VendorContact, VendorSpecialism, VendorType
 from app.models.warranty import (
@@ -219,11 +255,18 @@ __all__ = [
     "LeadActivity",
     "LeadSource",
     "LeadStatus",
+    "LeadProposal",
+    "LeadProposalStatus",
+    "ProposalItem",
+    "ProposalTemplate",
+    "ProposalTemplateItem",
     "Buyer",
     "Contract",
     "ContractStatus",
     "Selection",
     "SelectionStatus",
+    "SelectionApprovalStatus",
+    "SelectionChoice",
     # Job and money
     "Job",
     "JobStatus",
@@ -238,6 +281,14 @@ __all__ = [
     "InvoiceLine",
     "InvoiceStatus",
     "ACTUAL_STATUSES",
+    "OwnerInvoice",
+    "OwnerInvoiceLine",
+    "OwnerPayment",
+    "OwnerInvoiceKind",
+    "OwnerInvoiceStatus",
+    "OWNER_OPEN_STATUSES",
+    "CostInboxItem",
+    "CostInboxStatus",
     "ChangeOrder",
     "ChangeOrderLine",
     "ChangeOrderStatus",
@@ -263,6 +314,10 @@ __all__ = [
     "Document",
     "DocumentCategory",
     "DocumentStatus",
+    "Estimate",
+    "EstimateItem",
+    "EstimateStatus",
+    "ClientUpdate",
     # Bidding
     "BidPackage",
     "Bid",
@@ -313,6 +368,9 @@ __all__ = [
     "MeetingStatus",
     "MeetingType",
     "Correspondence",
+    "Comment",
+    "Message",
+    "MessageRecipient",
     "DrawingSet",
     "Drawing",
     "SetStatus",
@@ -332,6 +390,11 @@ __all__ = [
     "ActionPlanItem",
     "ActionPlanStatus",
     "Timecard",
+    # Time clock
+    "Shift",
+    "ShiftStatus",
+    "ShiftType",
+    "OutOfBoundsStatus",
     # Land
     "LandProject",
     "LandObligation",

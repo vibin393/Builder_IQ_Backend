@@ -29,13 +29,13 @@ class SubmittalActivityKind(StrEnum):
     """Every move a submittal can make, so the log reads as a story."""
 
     CREATED = "created"
-    SUBMITTED = "submitted"          # sent in for review
+    SUBMITTED = "submitted"  # sent in for review
     REVIEW_STARTED = "review_started"
     APPROVED = "approved"
     APPROVED_AS_NOTED = "approved_as_noted"
     REVISE_AND_RESUBMIT = "revise_and_resubmit"
     REJECTED = "rejected"
-    RESUBMITTED = "resubmitted"      # trade sent a new revision back
+    RESUBMITTED = "resubmitted"  # trade sent a new revision back
     REASSIGNED = "reassigned"
     EDITED = "edited"
 
@@ -50,8 +50,10 @@ class SubmittalRevision(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "submittal_revisions"
 
     submittal_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("submittals.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("submittals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     revision: Mapped[int] = mapped_column(Integer, nullable=False)
     # The decision that closed this round.
@@ -78,8 +80,10 @@ class SubmittalActivity(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "submittal_activity"
 
     submittal_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("submittals.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("submittals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     author_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

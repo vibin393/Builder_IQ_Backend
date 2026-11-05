@@ -53,13 +53,9 @@ async def list_users(
     if active is not None:
         scope = scope.where(User.is_active.is_(active))
 
-    total = await db.scalar(
-        select(func.count()).select_from(scope.subquery())
-    )
+    total = await db.scalar(select(func.count()).select_from(scope.subquery()))
     rows = await db.scalars(
-        scope.order_by(User.is_active.desc(), User.full_name)
-        .offset((page - 1) * size)
-        .limit(size)
+        scope.order_by(User.is_active.desc(), User.full_name).offset((page - 1) * size).limit(size)
     )
 
     return Page[UserRead](
@@ -83,7 +79,7 @@ async def users_summary(db: DbSession, current: RequireStaff) -> UserSummary:
         seen = u.last_login_at
         if seen is None:
             return False
-        if seen.tzinfo is None:            # SQLite drops the zone
+        if seen.tzinfo is None:  # SQLite drops the zone
             seen = seen.replace(tzinfo=UTC)
         return seen < cutoff
 
@@ -146,9 +142,7 @@ async def read_own_profile(user: CurrentUser) -> UserRead:
 
 
 @router.patch("/me", response_model=UserRead)
-async def update_own_profile(
-    payload: ProfileUpdate, db: DbSession, user: CurrentUser
-) -> UserRead:
+async def update_own_profile(payload: ProfileUpdate, db: DbSession, user: CurrentUser) -> UserRead:
     """Update your own details.
 
     Deliberately cannot change role, tenant or active status - those are an
@@ -192,9 +186,7 @@ async def remove_own_avatar(db: DbSession, user: CurrentUser) -> UserRead:
 
 
 @router.post("/me/password", response_model=Message)
-async def change_own_password(
-    payload: PasswordChange, db: DbSession, user: CurrentUser
-) -> Message:
+async def change_own_password(payload: PasswordChange, db: DbSession, user: CurrentUser) -> Message:
     """Change your own password. The current one is required, always."""
     if not verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(
@@ -213,9 +205,7 @@ async def change_own_password(
 
 
 async def _get_tenant_user(db: DbSession, tenant_id: uuid.UUID, user_id: uuid.UUID) -> User:
-    user = await db.scalar(
-        select(User).where(User.id == user_id, User.tenant_id == tenant_id)
-    )
+    user = await db.scalar(select(User).where(User.id == user_id, User.tenant_id == tenant_id))
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
@@ -228,11 +218,16 @@ async def get_user(user_id: uuid.UUID, db: DbSession, current: RequireStaff) -> 
 
 
 async def _active_owners(db, tenant_id) -> int:
-    return await db.scalar(
-        select(func.count()).select_from(User).where(
-            User.tenant_id == tenant_id, User.role == UserRole.OWNER, User.is_active.is_(True)
+    return (
+        await db.scalar(
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.tenant_id == tenant_id, User.role == UserRole.OWNER, User.is_active.is_(True)
+            )
         )
-    ) or 0
+        or 0
+    )
 
 
 @router.patch("/{user_id}", response_model=UserRead)
@@ -264,13 +259,10 @@ async def update_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
-                "You cannot deactivate yourself or change your own role. "
-                "Ask another administrator."
+                "You cannot deactivate yourself or change your own role. Ask another administrator."
             ),
         )
-    losing_owner = user.role is UserRole.OWNER and user.is_active and (
-        deactivating or role_changes
-    )
+    losing_owner = user.role is UserRole.OWNER and user.is_active and (deactivating or role_changes)
     if losing_owner and await _active_owners(db, admin.tenant_id) <= 1:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

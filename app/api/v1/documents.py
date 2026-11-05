@@ -19,6 +19,7 @@ from sqlalchemy import or_, select
 
 from app.api.deps import DbSession, RequireStaff, get_tenant_scoped
 from app.models.community import Community
+from app.models.crm import Lead
 from app.models.document import (
     Document,
     DocumentCategory,
@@ -54,6 +55,8 @@ async def _validate_links(db, tenant_id, payload) -> None:
         await get_tenant_scoped(db, Plan, tenant_id, payload.plan_id)
     if getattr(payload, "vendor_id", None):
         await get_tenant_scoped(db, Vendor, tenant_id, payload.vendor_id)
+    if getattr(payload, "lead_id", None):
+        await get_tenant_scoped(db, Lead, tenant_id, payload.lead_id)
 
 
 # --- analytics ----------------------------------------------------------------
@@ -109,6 +112,7 @@ async def list_documents(
     community_id: uuid.UUID | None = None,
     plan_id: uuid.UUID | None = None,
     vendor_id: uuid.UUID | None = None,
+    lead_id: uuid.UUID | None = None,
     category: DocumentCategory | None = None,
     status_filter: DocumentStatus | None = Query(default=None, alias="status"),
     critical_only: bool = False,
@@ -123,6 +127,8 @@ async def list_documents(
         stmt = stmt.where(Document.community_id == community_id)
     if plan_id is not None:
         stmt = stmt.where(Document.plan_id == plan_id)
+    if lead_id is not None:
+        stmt = stmt.where(Document.lead_id == lead_id)
     if vendor_id is not None:
         stmt = stmt.where(Document.vendor_id == vendor_id)
     if category is not None:

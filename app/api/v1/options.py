@@ -102,7 +102,8 @@ async def _stats(db, tenant_id, options: list[Option]) -> dict[uuid.UUID, Option
     sels = list(
         await db.scalars(
             select(Selection).where(
-                Selection.tenant_id == tenant_id, Selection.option_id.in_(ids),
+                Selection.tenant_id == tenant_id,
+                Selection.option_id.in_(ids),
                 Selection.status != SelectionStatus.CANCELLED,
             )
         )
@@ -111,7 +112,8 @@ async def _stats(db, tenant_id, options: list[Option]) -> dict[uuid.UUID, Option
     sold = list(
         await db.scalars(
             select(Job).where(
-                Job.tenant_id == tenant_id, Job.sold_date.isnot(None),
+                Job.tenant_id == tenant_id,
+                Job.sold_date.isnot(None),
                 Job.status != JobStatus.CANCELLED,
             )
         )
@@ -218,7 +220,8 @@ async def options_summary(db: DbSession, user: RequireStaff):
             (sum(margins) / len(margins)).quantize(Decimal("0.1")) if margins else None
         ),
         low_margin=sum(
-            1 for o in priced
+            1
+            for o in priced
             if stats[o.id].margin_pct is not None and stats[o.id].margin_pct < MARGIN_FLOOR_PCT
         ),
         margin_floor_pct=MARGIN_FLOOR_PCT,
@@ -227,8 +230,11 @@ async def options_summary(db: DbSession, user: RequireStaff):
         pending_selections=sum(stats[o.id].pending for o in options),
         top=[
             PopularOption(
-                option_id=o.id, code=o.code, name=o.name,
-                confirmed=stats[o.id].confirmed, revenue=stats[o.id].revenue,
+                option_id=o.id,
+                code=o.code,
+                name=o.name,
+                confirmed=stats[o.id].confirmed,
+                revenue=stats[o.id].revenue,
             )
             for o in top
             if stats[o.id].confirmed
@@ -270,12 +276,23 @@ async def update_option(
     if new_price is not None and new_price != o.price:
         db.add(
             OptionPriceChange(
-                tenant_id=admin.tenant_id, option_id=o.id, old_price=o.price,
-                new_price=new_price, changed_by_id=admin.id, reason=reason,
+                tenant_id=admin.tenant_id,
+                option_id=o.id,
+                old_price=o.price,
+                new_price=new_price,
+                changed_by_id=admin.id,
+                reason=reason,
             )
         )
-    required = ("code", "name", "category", "price", "schedule_days", "is_structural",
-                "max_quantity")
+    required = (
+        "code",
+        "name",
+        "category",
+        "price",
+        "schedule_days",
+        "is_structural",
+        "max_quantity",
+    )
     for key, value in data.items():
         if key in required and value is None:
             continue
@@ -314,10 +331,20 @@ async def copy_option(
     src = await _option(db, admin.tenant_id, option_id)
     code = payload.code.strip().upper()
     await _require_unique_code(db, admin.tenant_id, code)
-    fields = ("description", "category", "price", "schedule_days", "is_structural",
-              "max_quantity", "unit", "supplier_ref")
+    fields = (
+        "description",
+        "category",
+        "price",
+        "schedule_days",
+        "is_structural",
+        "max_quantity",
+        "unit",
+        "supplier_ref",
+    )
     new = Option(
-        tenant_id=admin.tenant_id, code=code, name=payload.name.strip(),
+        tenant_id=admin.tenant_id,
+        code=code,
+        name=payload.name.strip(),
         **{f: getattr(src, f) for f in fields},
     )
     db.add(new)
@@ -325,8 +352,12 @@ async def copy_option(
     for cl in src.cost_lines:
         db.add(
             OptionCostLine(
-                tenant_id=admin.tenant_id, option_id=new.id, cost_code_id=cl.cost_code_id,
-                vendor_id=cl.vendor_id, amount=cl.amount, description=cl.description,
+                tenant_id=admin.tenant_id,
+                option_id=new.id,
+                cost_code_id=cl.cost_code_id,
+                vendor_id=cl.vendor_id,
+                amount=cl.amount,
+                description=cl.description,
             )
         )
     plan_ids = list(
@@ -379,10 +410,13 @@ async def option_selections(option_id: uuid.UUID, db: DbSession, user: RequireSt
     }
     return [
         OptionSelectionRow(
-            selection_id=r.id, job_id=r.job_id,
+            selection_id=r.id,
+            job_id=r.job_id,
             job_number=jobs[r.job_id].job_number if r.job_id in jobs else "—",
-            status=r.status.value, quantity=r.quantity,
-            price_at_selection=r.price_at_selection, cost_at_selection=r.cost_at_selection,
+            status=r.status.value,
+            quantity=r.quantity,
+            price_at_selection=r.price_at_selection,
+            cost_at_selection=r.cost_at_selection,
             selected_date=r.selected_date,
         )
         for r in rows
@@ -411,7 +445,8 @@ async def _require_vendor(db, tenant_id, vendor_id) -> None:
 
 
 @router.post(
-    "/options/{option_id}/cost-lines", response_model=OptionCostLineRead,
+    "/options/{option_id}/cost-lines",
+    response_model=OptionCostLineRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_option_cost_line(

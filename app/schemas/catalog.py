@@ -17,6 +17,7 @@ class ORMModel(BaseModel):
 
 # --- Cost codes ---------------------------------------------------------------
 
+
 class CostCodeCreate(BaseModel):
     code: str = Field(min_length=1, max_length=32)
     name: str = Field(min_length=1, max_length=200)
@@ -55,6 +56,7 @@ class CostCodeRead(ORMModel):
 
 
 # --- Vendors ------------------------------------------------------------------
+
 
 class VendorCreate(BaseModel):
     code: str = Field(min_length=1, max_length=32)

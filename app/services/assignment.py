@@ -111,9 +111,7 @@ class RoundRobin:
             key=lambda p: (load.get(p.id, (0, None))[0], _epoch(load.get(p.id, (0, None))[1])),
         ).id
 
-    async def _workload(
-        self, user_ids: list[uuid.UUID]
-    ) -> dict[uuid.UUID, tuple[int, object]]:
+    async def _workload(self, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[int, object]]:
         """Per person: how many automated leads they hold, and when the last arrived.
 
         Read from the intake events rather than from the activity trail. The trail

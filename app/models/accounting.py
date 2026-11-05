@@ -39,9 +39,9 @@ def _values(e):
 
 
 class ExportKind(StrEnum):
-    INVOICES = "invoices"     # purchase invoices: cost in, creditor and retention up
-    PAYMENTS = "payments"     # payments out: creditor down, bank and CIS liability
-    RETENTION = "retention"   # retention released and paid to the trade
+    INVOICES = "invoices"  # purchase invoices: cost in, creditor and retention up
+    PAYMENTS = "payments"  # payments out: creditor down, bank and CIS liability
+    RETENTION = "retention"  # retention released and paid to the trade
 
 
 class ExportStatus(StrEnum):
@@ -51,9 +51,9 @@ class ExportStatus(StrEnum):
 
 
 class ExportFormat(StrEnum):
-    JOURNAL = "journal"   # generic double-entry CSV: any package, or a spreadsheet
-    SAGE50 = "sage50"     # Sage 50 Accounts audit-trail import, JD/JC journal rows
-    XERO = "xero"         # Xero manual journal import, job as a tracking category
+    JOURNAL = "journal"  # generic double-entry CSV: any package, or a spreadsheet
+    SAGE50 = "sage50"  # Sage 50 Accounts audit-trail import, JD/JC journal rows
+    XERO = "xero"  # Xero manual journal import, job as a tracking category
 
 
 class AccountingSettings(UUIDMixin, TenantMixin, TimestampMixin, Base):

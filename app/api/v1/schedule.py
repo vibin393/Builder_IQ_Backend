@@ -82,9 +82,7 @@ async def behind(
     job_id: Annotated[uuid.UUID | None, Query(description="One home.")] = None,
 ):
     """Tasks that should have finished and have not, worst first."""
-    return await ScheduleService(db, user.tenant_id).behind(
-        vendor_id=vendor_id, job_id=job_id
-    )
+    return await ScheduleService(db, user.tenant_id).behind(vendor_id=vendor_id, job_id=job_id)
 
 
 # =============================================================== templates =====
@@ -167,9 +165,7 @@ async def reorder_template(
     template_id: uuid.UUID, payload: ReorderRequest, db: DbSession, user: RequireStaff
 ):
     """Renumber the sequence. Every task must appear exactly once."""
-    return await ScheduleService(db, user.tenant_id).reorder_template(
-        template_id, payload.task_ids
-    )
+    return await ScheduleService(db, user.tenant_id).reorder_template(template_id, payload.task_ids)
 
 
 # =========================================================== one house =====

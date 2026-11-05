@@ -52,11 +52,11 @@ class CampaignChannel(StrEnum):
     """
 
     EMAIL = "email"
-    PRINT = "print"                 # local paper, brochure drop
-    SIGNAGE = "signage"             # boards on the road, site hoarding
+    PRINT = "print"  # local paper, brochure drop
+    SIGNAGE = "signage"  # boards on the road, site hoarding
     SOCIAL = "social"
-    PORTAL = "portal"               # featured listing on Rightmove and similar
-    EVENT = "event"                 # parade of homes, open weekend
+    PORTAL = "portal"  # featured listing on Rightmove and similar
+    EVENT = "event"  # parade of homes, open weekend
     RADIO = "radio"
     OTHER = "other"
 
@@ -79,10 +79,10 @@ class SurveyStage(StrEnum):
 class SurveyStatus(StrEnum):
     """Where a sent survey is in its own small lifecycle."""
 
-    PENDING = "pending"        # sent, awaiting a response
-    RESPONDED = "responded"    # the homeowner answered
-    DECLINED = "declined"      # the homeowner said no thanks
-    EXPIRED = "expired"        # the response window closed with no answer
+    PENDING = "pending"  # sent, awaiting a response
+    RESPONDED = "responded"  # the homeowner answered
+    DECLINED = "declined"  # the homeowner said no thanks
+    EXPIRED = "expired"  # the response window closed with no answer
 
 
 class Campaign(UUIDMixin, TenantMixin, TimestampMixin, Base):
@@ -108,12 +108,8 @@ class Campaign(UUIDMixin, TenantMixin, TimestampMixin, Base):
     #: What was set aside, and what was actually spent. Both, because "we
     #: overspent on the parade again" is a sentence a marketing budget exists to
     #: make sayable.
-    budget: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), default=Decimal("0"), nullable=False
-    )
-    cost: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), default=Decimal("0"), nullable=False
-    )
+    budget: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"), nullable=False)
+    cost: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"), nullable=False)
 
     status: Mapped[CampaignStatus] = mapped_column(
         Enum(
@@ -181,8 +177,10 @@ class Survey(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "surveys"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     buyer_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("buyers.id", ondelete="SET NULL")

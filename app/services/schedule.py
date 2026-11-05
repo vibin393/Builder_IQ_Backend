@@ -177,9 +177,7 @@ class ScheduleService:
             )
             data["sequence"] = (highest or 0) + 1
 
-        task = ScheduleTemplateTask(
-            tenant_id=self.tenant_id, template_id=template_id, **data
-        )
+        task = ScheduleTemplateTask(tenant_id=self.tenant_id, template_id=template_id, **data)
         self.db.add(task)
         await self.db.commit()
         return task
@@ -249,9 +247,7 @@ class ScheduleService:
 
         existing = await self.tasks.count(job_id=job.id)
         if existing:
-            raise Conflict(
-                f"{job.job_number} already has a schedule of {existing} tasks."
-            )
+            raise Conflict(f"{job.job_number} already has a schedule of {existing} tasks.")
 
         if job.status is JobStatus.CANCELLED:
             raise BusinessRuleViolation(
@@ -271,9 +267,7 @@ class ScheduleService:
                 if template_task.offset_days
                 else begin
             )
-            task_finish = add_working_days(
-                task_start, template_task.duration_days, holidays
-            )
+            task_finish = add_working_days(task_start, template_task.duration_days, holidays)
             created.append(
                 self.tasks.stage(
                     job_id=job.id,
@@ -289,8 +283,7 @@ class ScheduleService:
                     # for the one in front of them.
                     status=(
                         TaskStatus.READY
-                        if template_task.sequence
-                        == min(t.sequence for t in template.tasks)
+                        if template_task.sequence == min(t.sequence for t in template.tasks)
                         else TaskStatus.NOT_STARTED
                     ),
                 )
@@ -378,9 +371,7 @@ class ScheduleService:
         await self.db.commit()
         return await self.tasks.get(task_id)
 
-    async def complete_task(
-        self, task_id: uuid.UUID, actual_finish: date | None = None
-    ) -> dict:
+    async def complete_task(self, task_id: uuid.UUID, actual_finish: date | None = None) -> dict:
         """Mark a task done and push everything behind it by the slip.
 
         The ripple is what makes the schedule worth keeping. A superintendent
@@ -468,9 +459,7 @@ class ScheduleService:
         holidays = await self._non_working()
         old_start = task.scheduled_start
         task.scheduled_start = next_working_day(start, holidays)
-        task.scheduled_finish = add_working_days(
-            task.scheduled_start, task.duration_days, holidays
-        )
+        task.scheduled_finish = add_working_days(task.scheduled_start, task.duration_days, holidays)
 
         shifted = 0
         if cascade and old_start:
@@ -558,11 +547,14 @@ class ScheduleService:
         horizon = today + timedelta(days=LOOKAHEAD_DAYS)
 
         async def n(*conditions) -> int:
-            return await self.db.scalar(
-                select(func.count())
-                .select_from(JobTask)
-                .where(JobTask.tenant_id == self.tenant_id, *conditions)
-            ) or 0
+            return (
+                await self.db.scalar(
+                    select(func.count())
+                    .select_from(JobTask)
+                    .where(JobTask.tenant_id == self.tenant_id, *conditions)
+                )
+                or 0
+            )
 
         blocked = await n(JobTask.status == TaskStatus.BLOCKED)
         overdue = await n(
@@ -578,11 +570,14 @@ class ScheduleService:
         )
         in_progress = await n(JobTask.status == TaskStatus.IN_PROGRESS)
 
-        templates = await self.db.scalar(
-            select(func.count())
-            .select_from(ScheduleTemplate)
-            .where(ScheduleTemplate.tenant_id == self.tenant_id)
-        ) or 0
+        templates = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(ScheduleTemplate)
+                .where(ScheduleTemplate.tenant_id == self.tenant_id)
+            )
+            or 0
+        )
 
         return {
             "templates": templates,

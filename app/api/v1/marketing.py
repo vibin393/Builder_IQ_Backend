@@ -121,15 +121,11 @@ async def schedule(
     campaign_id: uuid.UUID, payload: ScheduleRequest, db: DbSession, user: RequireSales
 ):
     """Put a date on it without committing the spend."""
-    return await MarketingService(db, user.tenant_id).schedule(
-        campaign_id, payload.scheduled_for
-    )
+    return await MarketingService(db, user.tenant_id).schedule(campaign_id, payload.scheduled_for)
 
 
 @router.post("/{campaign_id}/launch", response_model=CampaignRead)
-async def launch(
-    campaign_id: uuid.UUID, payload: LaunchRequest, db: DbSession, user: RequireSales
-):
+async def launch(campaign_id: uuid.UUID, payload: LaunchRequest, db: DbSession, user: RequireSales):
     """It is out: handed to the provider, or the sign is up.
 
     Email is refused without a subject line - one arriving with an empty subject
@@ -167,15 +163,11 @@ async def complete(
     campaign_id: uuid.UUID, payload: CompleteRequest, db: DbSession, user: RequireSales
 ):
     """It has finished running."""
-    return await MarketingService(db, user.tenant_id).complete(
-        campaign_id, ends_on=payload.ends_on
-    )
+    return await MarketingService(db, user.tenant_id).complete(campaign_id, ends_on=payload.ends_on)
 
 
 @router.post("/{campaign_id}/cancel", response_model=CampaignRead)
-async def cancel(
-    campaign_id: uuid.UUID, payload: CancelRequest, db: DbSession, user: RequireSales
-):
+async def cancel(campaign_id: uuid.UUID, payload: CancelRequest, db: DbSession, user: RequireSales):
     """Stop a campaign. A reason is required - money was committed against it."""
     return await MarketingService(db, user.tenant_id).cancel(campaign_id, payload.reason)
 

@@ -65,10 +65,10 @@ class PlanStats(BaseModel):
     standard_cost: Money
     cost_lines: int
     labour_hours: Decimal
-    margin: Money                     # base price less standard cost
+    margin: Money  # base price less standard cost
     margin_pct: Decimal | None
     elevations: int
-    communities: int                  # developments it is offered on
+    communities: int  # developments it is offered on
     live_homes: int
     finished_homes: int
     #: Average actual cost (approved invoices) of finished homes of this plan, and how
@@ -174,10 +174,10 @@ class PricingGuide(BaseModel):
     """What a home of this plan should sell for, built up the way a price list is."""
 
     plan_price: Money
-    community_price: Money | None      # this development's price for the plan, if set
-    house_price: Money                 # the one that applies
+    community_price: Money | None  # this development's price for the plan, if set
+    house_price: Money  # the one that applies
     elevation_code: str | None
     elevation_adjustment: Money
     plot_premium: Money
-    base_price: Money                  # house price + elevation: the contract's base
-    total: Money                       # base + plot premium
+    base_price: Money  # house price + elevation: the contract's base
+    total: Money  # base + plot premium

@@ -31,9 +31,9 @@ class OptionCategory(StrEnum):
     APPLIANCE = "appliance"
     KITCHEN = "kitchen"
     BATHROOM = "bathroom"
-    HEATING = "heating"          # heat pumps, underfloor heating, solar PV
+    HEATING = "heating"  # heat pumps, underfloor heating, solar PV
     LANDSCAPING = "landscaping"
-    TECHNOLOGY = "technology"    # data cabling, EV charger, smart home
+    TECHNOLOGY = "technology"  # data cabling, EV charger, smart home
     OTHER = "other"
 
 
@@ -89,12 +89,16 @@ class OptionCostLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     option_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("options.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("options.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL")
@@ -117,12 +121,16 @@ class OptionPlan(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("option_id", "plan_id", name="uq_option_plans_pair"),)
 
     option_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("options.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("options.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
 
@@ -132,8 +140,10 @@ class OptionPriceChange(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "option_price_changes"
 
     option_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("options.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("options.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     old_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     new_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)

@@ -152,9 +152,7 @@ async def mark_no_show(
     Its own ending rather than a cancellation: a cancellation is somebody telling
     you, a no-show is a wasted slot and a consultant sitting alone for three hours.
     """
-    return await DesignStudioService(db, user.tenant_id).mark_no_show(
-        appointment_id, payload.note
-    )
+    return await DesignStudioService(db, user.tenant_id).mark_no_show(appointment_id, payload.note)
 
 
 @router.post("/appointments/{appointment_id}/cancel", response_model=AppointmentRead)
@@ -196,16 +194,12 @@ async def list_signatures(
     filters = {
         k: v for k, v in {"status": status_filter, "job_id": job_id}.items() if v is not None
     }
-    items, total = await DesignStudioService(db, user.tenant_id).list_signatures(
-        params, **filters
-    )
+    items, total = await DesignStudioService(db, user.tenant_id).list_signatures(params, **filters)
     return _page(items, params, total)
 
 
 @router.post("/signatures", response_model=SignatureRead, status_code=CREATED)
-async def create_signature_request(
-    payload: SignatureCreate, db: DbSession, user: RequireSales
-):
+async def create_signature_request(payload: SignatureCreate, db: DbSession, user: RequireSales):
     """Prepare a document for signature. Starts as a draft."""
     return await DesignStudioService(db, user.tenant_id).create_signature_request(
         **payload.model_dump()

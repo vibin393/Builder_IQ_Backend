@@ -41,8 +41,7 @@ class JobRepository(TenantRepository[Job]):
             params,
             Job.projected_completion.is_not(None),
             Job.status.notin_((JobStatus.CANCELLED,)),
-            func.coalesce(Job.actual_completion, func.current_date())
-            > Job.projected_completion,
+            func.coalesce(Job.actual_completion, func.current_date()) > Job.projected_completion,
             order_by=Job.projected_completion.asc(),
             **filters,
         )
@@ -73,9 +72,7 @@ class JobRepository(TenantRepository[Job]):
         the database level.
         """
         return await self.db.scalar(
-            self._base().where(
-                Job.lot_id == lot_id, Job.status != JobStatus.CANCELLED
-            )
+            self._base().where(Job.lot_id == lot_id, Job.status != JobStatus.CANCELLED)
         )
 
     async def counts_for_dashboard(self) -> dict:
@@ -87,9 +84,10 @@ class JobRepository(TenantRepository[Job]):
         base = [Job.tenant_id == self.tenant_id]
 
         async def n(*extra) -> int:
-            return await self.db.scalar(
-                select(func.count()).select_from(Job).where(*base, *extra)
-            ) or 0
+            return (
+                await self.db.scalar(select(func.count()).select_from(Job).where(*base, *extra))
+                or 0
+            )
 
         by_status = {
             row[0].value: row[1]

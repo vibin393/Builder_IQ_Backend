@@ -130,6 +130,6 @@ class MeetingSummary(BaseModel):
     open_actions: int
     overdue_actions: int
     correspondence: int
-    awaiting_response: int      # correspondence that demanded a reply and hasn't had one
+    awaiting_response: int  # correspondence that demanded a reply and hasn't had one
     overdue_correspondence: int
     by_type: dict[str, int]

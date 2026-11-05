@@ -256,9 +256,7 @@ async def submit_bid(
 
 
 @router.post("/{package_id}/bids/{bid_id}/decline", response_model=BidRead)
-async def decline_bid(
-    package_id: uuid.UUID, bid_id: uuid.UUID, db: DbSession, user: RequireStaff
-):
+async def decline_bid(package_id: uuid.UUID, bid_id: uuid.UUID, db: DbSession, user: RequireStaff):
     """Record that a trade has declined to bid (a 'no bid'). It stops showing as an
     outstanding invitation and counts toward coverage as a response."""
     bid = await get_tenant_scoped(db, Bid, user.tenant_id, bid_id)

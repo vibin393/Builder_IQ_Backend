@@ -18,7 +18,7 @@ from app.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 class TaskStatus(StrEnum):
     NOT_STARTED = "not_started"
-    READY = "ready"            # predecessors complete, trade can start
+    READY = "ready"  # predecessors complete, trade can start
     IN_PROGRESS = "in_progress"
     COMPLETE = "complete"
     BLOCKED = "blocked"
@@ -79,8 +79,10 @@ class ScheduleTemplateTask(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "schedule_template_tasks"
 
     template_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("schedule_templates.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("schedule_templates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -103,8 +105,10 @@ class JobTask(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "job_tasks"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -157,8 +161,7 @@ class JobTask(UUIDMixin, TenantMixin, TimestampMixin, Base):
         """
         return bool(
             self.scheduled_finish
-            and self.status
-            not in (TaskStatus.COMPLETE, TaskStatus.SKIPPED)
+            and self.status not in (TaskStatus.COMPLETE, TaskStatus.SKIPPED)
             and self.scheduled_finish < date.today()
         )
 

@@ -44,12 +44,16 @@ class Contract(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("job_id", name="uq_contracts_job"),)
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     buyer_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("buyers.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("buyers.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[ContractStatus] = mapped_column(
         Enum(

@@ -21,8 +21,8 @@ class CostType(StrEnum):
     MATERIALS = "materials"
     SUBCONTRACT = "subcontract"
     PLANT = "plant"
-    PRELIMINARIES = "preliminaries"   # site set-up, welfare, scaffolding, management
-    FEES = "fees"                     # design, surveys, warranty provider, building control
+    PRELIMINARIES = "preliminaries"  # site set-up, welfare, scaffolding, management
+    FEES = "fees"  # design, surveys, warranty provider, building control
     OTHER = "other"
 
 

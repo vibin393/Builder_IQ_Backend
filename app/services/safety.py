@@ -35,7 +35,6 @@ from app.core.errors import BusinessRuleViolation
 from app.models.field import Inspection, InspectionResult, InspectionType
 from app.models.safety import (
     ActionPlan,
-    ActionPlanItem,
     ActionPlanStatus,
     Incident,
     IncidentType,
@@ -61,15 +60,11 @@ from app.schemas.common import PageParams
 #: point: the fix is claimed, then somebody accepts or rejects it. NOT_ACCEPTED
 #: goes back to the person who owed it rather than sideways into closed.
 OBSERVATION_MOVES: dict[ObservationStatus, frozenset[ObservationStatus]] = {
-    ObservationStatus.INITIATED: frozenset(
-        {ObservationStatus.READY_FOR_REVIEW}
-    ),
+    ObservationStatus.INITIATED: frozenset({ObservationStatus.READY_FOR_REVIEW}),
     ObservationStatus.READY_FOR_REVIEW: frozenset(
         {ObservationStatus.CLOSED, ObservationStatus.NOT_ACCEPTED}
     ),
-    ObservationStatus.NOT_ACCEPTED: frozenset(
-        {ObservationStatus.READY_FOR_REVIEW}
-    ),
+    ObservationStatus.NOT_ACCEPTED: frozenset({ObservationStatus.READY_FOR_REVIEW}),
     # Reopening is deliberate and goes back to the start, so the second round is
     # a full round rather than a shortcut to closed.
     ObservationStatus.CLOSED: frozenset({ObservationStatus.INITIATED}),
@@ -308,9 +303,7 @@ class SafetyService:
             title=f"{inspection.name} failed",
             description=inspection.failure_reason,
             location=inspection.name,
-            observation_type=(
-                ObservationType.SAFETY if municipal else ObservationType.QUALITY
-            ),
+            observation_type=(ObservationType.SAFETY if municipal else ObservationType.QUALITY),
             severity=severity,
             inspection_id=inspection.id,
             assigned_vendor_id=vendor_id,
@@ -353,9 +346,7 @@ class SafetyService:
         )
         return await self.incidents.create(reported_by_id=actor_id, **data)
 
-    async def classify_incident(
-        self, incident_id: uuid.UUID, category: RiddorCategory
-    ) -> Incident:
+    async def classify_incident(self, incident_id: uuid.UUID, category: RiddorCategory) -> Incident:
         """Change the RIDDOR category, which changes the deadline with it."""
         incident = await self.incidents.get(incident_id)
         if incident.reported_to_hse_on and category is RiddorCategory.NOT_REPORTABLE:
@@ -370,7 +361,11 @@ class SafetyService:
         return await self.incidents.get(incident_id)
 
     async def record_hse_report(
-        self, incident_id: uuid.UUID, *, reported_on: date | None = None, reference: str | None = None
+        self,
+        incident_id: uuid.UUID,
+        *,
+        reported_on: date | None = None,
+        reference: str | None = None,
     ) -> Incident:
         """Record that the report has actually gone in."""
         incident = await self.incidents.get(incident_id)
@@ -397,9 +392,7 @@ class SafetyService:
         await self.db.commit()
         return await self.incidents.get(incident_id)
 
-    async def investigate_incident(
-        self, incident_id: uuid.UUID, root_cause: str
-    ) -> Incident:
+    async def investigate_incident(self, incident_id: uuid.UUID, root_cause: str) -> Incident:
         incident = await self.incidents.get(incident_id)
         if not (root_cause or "").strip():
             raise BusinessRuleViolation(
@@ -456,9 +449,7 @@ class SafetyService:
     # =============================================== action plans =====
 
     async def list_plans(self, params: PageParams, **filters):
-        return await self.plans.paginate(
-            params, order_by=ActionPlan.created_at.desc(), **filters
-        )
+        return await self.plans.paginate(params, order_by=ActionPlan.created_at.desc(), **filters)
 
     async def create_plan(self, *, actor_id=None, **data) -> ActionPlan:
         if data.get("job_id"):
@@ -482,7 +473,12 @@ class SafetyService:
         return await self.plans.get(plan_id)
 
     async def start_from_template(
-        self, template_id: uuid.UUID, job_id: uuid.UUID, *, actor_id=None, due_on: date | None = None
+        self,
+        template_id: uuid.UUID,
+        job_id: uuid.UUID,
+        *,
+        actor_id=None,
+        due_on: date | None = None,
     ) -> ActionPlan:
         """Copy a template onto a home and start it.
 
@@ -503,8 +499,7 @@ class SafetyService:
         if not template.items:
             raise BusinessRuleViolation(
                 f"{template.name} has no steps.",
-                "Starting it would put an empty checklist on the home, which reads "
-                "as complete.",
+                "Starting it would put an empty checklist on the home, which reads as complete.",
             )
         await self.jobs.require_exists(job_id)
 
@@ -533,7 +528,12 @@ class SafetyService:
         return await self.plans.get(plan.id)
 
     async def complete_step(
-        self, plan_id: uuid.UUID, item_id: uuid.UUID, *, actor_id: uuid.UUID, notes: str | None = None
+        self,
+        plan_id: uuid.UUID,
+        item_id: uuid.UUID,
+        *,
+        actor_id: uuid.UUID,
+        notes: str | None = None,
     ) -> ActionPlan:
         """Mark a step done.
 

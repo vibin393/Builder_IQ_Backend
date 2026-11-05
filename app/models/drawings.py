@@ -42,7 +42,7 @@ class DrawingDiscipline(StrEnum):
 
 class SetStatus(StrEnum):
     DRAFT = "draft"
-    ISSUED = "issued"        # live: this is what trades should be building from
+    ISSUED = "issued"  # live: this is what trades should be building from
     SUPERSEDED = "superseded"
     VOID = "void"
 
@@ -101,7 +101,9 @@ class DrawingSet(UUIDMixin, TenantMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(String(1000))
 
     drawings: Mapped[list["Drawing"]] = relationship(
-        back_populates="drawing_set", cascade="all, delete-orphan", lazy="selectin",
+        back_populates="drawing_set",
+        cascade="all, delete-orphan",
+        lazy="selectin",
         order_by="Drawing.sheet_number",
     )
 
@@ -127,8 +129,10 @@ class Drawing(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "drawings"
 
     drawing_set_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("drawing_sets.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("drawing_sets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sheet_number: Mapped[str] = mapped_column(String(32), nullable=False)
     title: Mapped[str] = mapped_column(String(300), nullable=False)
@@ -253,12 +257,16 @@ class TransmittalRecipient(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     transmittal_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("transmittals.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("transmittals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     transmittal: Mapped[Transmittal] = relationship(back_populates="recipients")

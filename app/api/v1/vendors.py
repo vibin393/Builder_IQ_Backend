@@ -74,10 +74,10 @@ class SpecialismsSet(BaseModel):
 
 class DirectoryRow(VendorRead):
     specialism_ids: list[uuid.UUID] = []
-    compliant: bool | None = None          # None for a supplier: not gated
+    compliant: bool | None = None  # None for a supplier: not gated
     compliance_note: str | None = None
-    open_commitment: Decimal = ZERO        # on committed POs, not yet invoiced
-    outstanding: Decimal = ZERO            # approved, not yet paid (net)
+    open_commitment: Decimal = ZERO  # on committed POs, not yet invoiced
+    outstanding: Decimal = ZERO  # approved, not yet paid (net)
     overdue: int = 0
     contacts: int = 0
 
@@ -157,8 +157,7 @@ async def _money(db, tenant_id, vendor_ids: list[uuid.UUID]):
         if i.status in ACTUAL_STATUSES:
             billed_po[i.purchase_order_id] += i.total
     out: dict[uuid.UUID, dict] = defaultdict(
-        lambda: {"committed": ZERO, "billed": ZERO, "open": ZERO, "outstanding": ZERO,
-                 "overdue": 0}
+        lambda: {"committed": ZERO, "billed": ZERO, "open": ZERO, "outstanding": ZERO, "overdue": 0}
     )
     for po in pos:
         if po.status in COMMITTED_STATUSES:
@@ -196,7 +195,8 @@ async def directory(
     if search:
         q = search.strip().lower()
         vendors = [
-            v for v in vendors
+            v
+            for v in vendors
             if q in v.name.lower() or q in v.code.lower() or q in (v.email or "").lower()
         ]
     ids = [v.id for v in vendors] or [uuid.uuid4()]
@@ -292,12 +292,24 @@ async def overview(vendor_id: uuid.UUID, db: DbSession, user: RequireStaff):
     )
 
     def po_row(p):
-        return DocRow(id=p.id, number=p.po_number, job_number=jobs.get(p.job_id),
-                      status=p.status.value, total=p.total, date=p.issued_date)
+        return DocRow(
+            id=p.id,
+            number=p.po_number,
+            job_number=jobs.get(p.job_id),
+            status=p.status.value,
+            total=p.total,
+            date=p.issued_date,
+        )
 
     def inv_row(i):
-        return DocRow(id=i.id, number=i.invoice_number, job_number=jobs.get(i.job_id),
-                      status=i.status.value, total=i.total, date=i.invoice_date)
+        return DocRow(
+            id=i.id,
+            number=i.invoice_number,
+            job_number=jobs.get(i.job_id),
+            status=i.status.value,
+            total=i.total,
+            date=i.invoice_date,
+        )
 
     return TradeOverview(
         vendor=VendorRead.model_validate(v),
@@ -305,8 +317,11 @@ async def overview(vendor_id: uuid.UUID, db: DbSession, user: RequireStaff):
         specialisms=[{"id": c.id, "code": c.code, "name": c.name} for c in spec_rows],
         compliance={
             "applies": v.vendor_type.value != "supplier",
-            "ok": check.ok, "reason": check.reason, "warning": check.warning,
-            "expired": check.expired, "expiring": check.expiring,
+            "ok": check.ok,
+            "reason": check.reason,
+            "warning": check.warning,
+            "expired": check.expired,
+            "expiring": check.expiring,
         },
         committed=m["committed"],
         billed=m["billed"],
@@ -319,7 +334,8 @@ async def overview(vendor_id: uuid.UUID, db: DbSession, user: RequireStaff):
         tax_year_from=ty,
         homes=len({p.job_id for p in pos if p.status in COMMITTED_STATUSES}),
         service_orders_open=sum(
-            1 for o in orders
+            1
+            for o in orders
             if o.status in (ServiceOrderStatus.ASSIGNED, ServiceOrderStatus.SCHEDULED)
         ),
         service_orders_total=len(orders),
@@ -337,7 +353,8 @@ async def overview(vendor_id: uuid.UUID, db: DbSession, user: RequireStaff):
 async def _only_primary(db, vendor_id, keep_id) -> None:
     for c in await db.scalars(
         select(VendorContact).where(
-            VendorContact.vendor_id == vendor_id, VendorContact.id != keep_id,
+            VendorContact.vendor_id == vendor_id,
+            VendorContact.id != keep_id,
             VendorContact.is_primary.is_(True),
         )
     ):

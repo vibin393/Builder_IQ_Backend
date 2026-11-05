@@ -48,13 +48,13 @@ if TYPE_CHECKING:
 
 
 class JobStatus(StrEnum):
-    PLANNED = "planned"          # lot + plan assigned, not sold
-    SOLD = "sold"                # contract signed
+    PLANNED = "planned"  # lot + plan assigned, not sold
+    SOLD = "sold"  # contract signed
     PERMITTING = "permitting"
     UNDER_CONSTRUCTION = "under_construction"
-    ON_HOLD = "on_hold"          # started, then stopped, with a reason
-    COMPLETE = "complete"        # built, not yet closed
-    CLOSED = "closed"            # title transferred to the buyer
+    ON_HOLD = "on_hold"  # started, then stopped, with a reason
+    COMPLETE = "complete"  # built, not yet closed
+    CLOSED = "closed"  # title transferred to the buyer
     WARRANTY = "warranty"
     CANCELLED = "cancelled"
 
@@ -97,7 +97,7 @@ class HoldReason(StrEnum):
 
     WEATHER = "weather"
     INSPECTION = "inspection"
-    BUYER_DECISION = "buyer_decision"       # waiting on a selection or a change
+    BUYER_DECISION = "buyer_decision"  # waiting on a selection or a change
     TRADE_UNAVAILABLE = "trade_unavailable"
     MATERIAL_SHORTAGE = "material_shortage"
     PERMIT = "permit"
@@ -109,8 +109,8 @@ class CancellationReason(StrEnum):
     BUYER_WITHDREW = "buyer_withdrew"
     FINANCE_FELL_THROUGH = "finance_fell_through"
     BUILDER_WITHDREW = "builder_withdrew"
-    LOT_PROBLEM = "lot_problem"             # survey, ground conditions, access
-    PLAN_CHANGED = "plan_changed"           # rebuilt as a different job
+    LOT_PROBLEM = "lot_problem"  # survey, ground conditions, access
+    PLAN_CHANGED = "plan_changed"  # rebuilt as a different job
     OTHER = "other"
 
 
@@ -138,16 +138,22 @@ class Job(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     job_number: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     community_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("communities.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("communities.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     lot_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("lots.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("lots.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("plans.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("plans.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     #: Which elevation of the plan. The same plan in brick and in render is the
     #: same house to the schedule and a different one to the buyer and the budget.

@@ -62,6 +62,10 @@ class LeadCreate(BaseModel):
     price_max: Decimal | None = Field(default=None, ge=0)
     bedrooms_needed: int | None = Field(default=None, ge=0, le=20)
     desired_move_in: date | None = None
+    project_type: str | None = Field(default=None, max_length=120)
+    tags: list[str] | None = None
+    confidence: int | None = Field(default=None, ge=0, le=100)
+    projected_sales_date: date | None = None
 
     is_prequalified: bool = False
     lender_name: str | None = Field(default=None, max_length=200)
@@ -114,6 +118,10 @@ class LeadUpdate(BaseModel):
     price_max: Decimal | None = Field(default=None, ge=0)
     bedrooms_needed: int | None = Field(default=None, ge=0, le=20)
     desired_move_in: date | None = None
+    project_type: str | None = Field(default=None, max_length=120)
+    tags: list[str] | None = None
+    confidence: int | None = Field(default=None, ge=0, le=100)
+    projected_sales_date: date | None = None
 
     is_prequalified: bool | None = None
     lender_name: str | None = Field(default=None, max_length=200)
@@ -137,7 +145,9 @@ class LeadRead(ORMModel):
     phone: str | None
     mobile: str | None
     preferred_contact: ContactMethod | None
+    address: str | None
     city: str | None
+    postcode: str | None
 
     status: LeadStatus
     source: LeadSource
@@ -151,6 +161,10 @@ class LeadRead(ORMModel):
     price_max: Decimal | None
     bedrooms_needed: int | None
     desired_move_in: date | None
+    project_type: str | None
+    tags: list[str] | None
+    confidence: int | None
+    projected_sales_date: date | None
 
     is_prequalified: bool
     has_home_to_sell: bool
@@ -162,6 +176,9 @@ class LeadRead(ORMModel):
     converted_buyer_id: uuid.UUID | None
     is_archived: bool
     notes: str | None
+    #: Geocoded position, for the leads map.
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
 
     # Derived, and cheap: both are a comparison against today, and a list is read
     # for exactly these two things - who is overdue and who is still live.

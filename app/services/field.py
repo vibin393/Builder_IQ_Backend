@@ -80,9 +80,7 @@ class PunchRepository(TenantRepository[PunchItem]):
 
     async def unresolved_for_job(self, job_id: uuid.UUID) -> list[PunchItem]:
         rows = await self.db.scalars(
-            self._base().where(
-                PunchItem.job_id == job_id, PunchItem.status.in_(UNRESOLVED_PUNCH)
-            )
+            self._base().where(PunchItem.job_id == job_id, PunchItem.status.in_(UNRESOLVED_PUNCH))
         )
         return list(rows)
 
@@ -283,9 +281,7 @@ class FieldService:
         item = await self.punch.get(item_id)
         self._require_move(item, PunchStatus.OPEN)
         item.status = PunchStatus.OPEN
-        item.ball_in_court = (
-            BallInCourt.TRADE if item.vendor_id else BallInCourt.BUILDER
-        )
+        item.ball_in_court = BallInCourt.TRADE if item.vendor_id else BallInCourt.BUILDER
         item.resolution_note = (reason or "").strip() or None
         await self.db.commit()
         return await self.punch.get(item_id)
@@ -331,9 +327,7 @@ class FieldService:
                 )
             )
             data["sequence"] = (highest or 0) + 1
-        item = InspectionItem(
-            tenant_id=self.tenant_id, inspection_id=inspection_id, **data
-        )
+        item = InspectionItem(tenant_id=self.tenant_id, inspection_id=inspection_id, **data)
         self.db.add(item)
         await self.db.commit()
         return item
@@ -469,15 +463,11 @@ class FieldService:
                         if inspection.inspection_type is InspectionType.MUNICIPAL
                         else PunchSeverity.MAJOR
                     ),
-                    status=(
-                        PunchStatus.ASSIGNED if check.vendor_id else PunchStatus.OPEN
-                    ),
+                    status=(PunchStatus.ASSIGNED if check.vendor_id else PunchStatus.OPEN),
                     # Whose check it was, where the checklist recorded one. A check
                     # nobody was named against leaves the builder to decide who
                     # fixes it, same as any other unassigned defect.
-                    ball_in_court=(
-                        BallInCourt.TRADE if check.vendor_id else BallInCourt.BUILDER
-                    ),
+                    ball_in_court=(BallInCourt.TRADE if check.vendor_id else BallInCourt.BUILDER),
                 )
             )
         await self.db.commit()
@@ -494,9 +484,7 @@ class FieldService:
         """
         original = await self.inspections.get(inspection_id)
         if original.result is not InspectionResult.FAILED:
-            raise Conflict(
-                f"{original.name} did not fail, so there is nothing to re-inspect."
-            )
+            raise Conflict(f"{original.name} did not fail, so there is nothing to re-inspect.")
         return await self.inspections.create(
             job_id=original.job_id,
             inspection_type=original.inspection_type,
@@ -570,32 +558,36 @@ class FieldService:
             scope.append(PunchItem.job_id == job_id)
 
         async def punch_count(*extra) -> int:
-            return await self.db.scalar(
-                select(func.count()).select_from(PunchItem).where(*scope, *extra)
-            ) or 0
+            return (
+                await self.db.scalar(
+                    select(func.count()).select_from(PunchItem).where(*scope, *extra)
+                )
+                or 0
+            )
 
         insp_scope = [Inspection.tenant_id == self.tenant_id]
         if job_id:
             insp_scope.append(Inspection.job_id == job_id)
 
-        failed = await self.db.scalar(
-            select(func.count())
-            .select_from(Inspection)
-            .where(*insp_scope, Inspection.result == InspectionResult.FAILED)
-        ) or 0
+        failed = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Inspection)
+                .where(*insp_scope, Inspection.result == InspectionResult.FAILED)
+            )
+            or 0
+        )
 
         log_scope = [DailyLog.tenant_id == self.tenant_id]
         if job_id:
             log_scope.append(DailyLog.job_id == job_id)
-        logs = await self.db.scalar(
-            select(func.count()).select_from(DailyLog).where(*log_scope)
-        ) or 0
+        logs = (
+            await self.db.scalar(select(func.count()).select_from(DailyLog).where(*log_scope)) or 0
+        )
 
         return {
             "open_punch": await punch_count(PunchItem.status.in_(UNRESOLVED_PUNCH)),
-            "awaiting_review": await punch_count(
-                PunchItem.status == PunchStatus.READY_FOR_REVIEW
-            ),
+            "awaiting_review": await punch_count(PunchItem.status == PunchStatus.READY_FOR_REVIEW),
             "overdue_punch": await punch_count(
                 PunchItem.status.in_(UNRESOLVED_PUNCH),
                 PunchItem.due_date.is_not(None),

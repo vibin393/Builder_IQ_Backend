@@ -60,9 +60,7 @@ class LabourService:
     # ================================================== timecards =====
 
     async def list_timecards(self, params: PageParams, **filters):
-        return await self.cards.paginate(
-            params, order_by=Timecard.worked_on.desc(), **filters
-        )
+        return await self.cards.paginate(params, order_by=Timecard.worked_on.desc(), **filters)
 
     async def record(self, *, actor_id=None, **data) -> Timecard:
         """Book hours against a home and a cost code."""
@@ -171,9 +169,7 @@ class LabourService:
         """
         card = await self.cards.get(card_id)
         if card.approved_on:
-            raise Conflict(
-                f"{card.worker_name}'s hours for {card.worked_on} are already approved."
-            )
+            raise Conflict(f"{card.worker_name}'s hours for {card.worked_on} are already approved.")
         if card.hourly_rate is None:
             raise BusinessRuleViolation(
                 f"No rate on {card.worker_name}'s hours for {card.worked_on}.",
@@ -189,9 +185,7 @@ class LabourService:
     async def withdraw_approval(self, card_id: uuid.UUID) -> Timecard:
         card = await self.cards.get(card_id)
         if not card.approved_on:
-            raise Conflict(
-                f"{card.worker_name}'s hours for {card.worked_on} are not approved."
-            )
+            raise Conflict(f"{card.worker_name}'s hours for {card.worked_on} are not approved.")
         card.approved_on = None
         card.approved_by_id = None
         await self.db.commit()
@@ -277,9 +271,7 @@ class LabourService:
                     "hours_variance": (
                         b["hours"] - budget_hours if budget_hours is not None else None
                     ),
-                    "cost_variance": (
-                        b["cost"] - budget_cost if budget_cost is not None else None
-                    ),
+                    "cost_variance": (b["cost"] - budget_cost if budget_cost is not None else None),
                     "average_rate": _divide(b["cost"], rated_hours),
                 }
             )
@@ -309,9 +301,7 @@ class LabourService:
             "total_labour_cost": total_cost,
             "overtime_hours": sum((c.overtime_hours for c in cards), ZERO),
             "unrated_hours": total_unrated,
-            "pending_hours": sum(
-                (c.total_hours for c in cards if not c.approved_on), ZERO
-            ),
+            "pending_hours": sum((c.total_hours for c in cards if not c.approved_on), ZERO),
             # Divided by the hours that actually have a rate. Dividing by all of
             # them reports a lower rate every time somebody forgets one.
             "average_rate": _divide(total_cost, total_hours - total_unrated),
@@ -449,9 +439,7 @@ class LabourService:
                     ),
                     "vendor_count": len(b["vendor_ids"]),
                     "average_day": _divide(b["hours"], Decimal(days)),
-                    "average_rate": _divide(
-                        b["labour_cost"], b["hours"] - b["unrated_hours"]
-                    ),
+                    "average_rate": _divide(b["labour_cost"], b["hours"] - b["unrated_hours"]),
                 }
             )
         rows.sort(key=lambda r: -r["hours"])

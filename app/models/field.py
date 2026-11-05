@@ -28,10 +28,10 @@ from app.models.communication import BallInCourt
 
 
 class InspectionType(StrEnum):
-    MUNICIPAL = "municipal"       # the city; a failure blocks the build
-    THIRD_PARTY = "third_party"   # engineer, energy rater
-    INTERNAL_QA = "internal_qa"   # the builder's own checklist
-    WALKTHROUGH = "walkthrough"   # with the buyer, before closing
+    MUNICIPAL = "municipal"  # the city; a failure blocks the build
+    THIRD_PARTY = "third_party"  # engineer, energy rater
+    INTERNAL_QA = "internal_qa"  # the builder's own checklist
+    WALKTHROUGH = "walkthrough"  # with the buyer, before closing
 
 
 class InspectionResult(StrEnum):
@@ -45,7 +45,7 @@ class ItemResult(StrEnum):
     """Result of one check within an inspection."""
 
     PENDING = "pending"
-    PASS = "pass"
+    PASS = "pass"  # nosec B105 - inspection result, not a password
     FAIL = "fail"
     NOT_APPLICABLE = "not_applicable"
 
@@ -97,8 +97,10 @@ class DailyLog(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     log_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     author_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -121,8 +123,10 @@ class Inspection(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "inspections"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     inspection_type: Mapped[InspectionType] = mapped_column(
         Enum(
@@ -161,9 +165,7 @@ class Inspection(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
     #: What the re-inspection cost. Municipal re-inspection fees are small and
     #: relentless, and nobody can argue them back to a trade without a number.
-    fee: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal("0"), nullable=False
-    )
+    fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"), nullable=False)
 
     items: Mapped[list["InspectionItem"]] = relationship(
         back_populates="inspection", cascade="all, delete-orphan", lazy="selectin"
@@ -204,8 +206,10 @@ class InspectionItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "inspection_items"
 
     inspection_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("inspections.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("inspections.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sequence: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -234,8 +238,10 @@ class PunchItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "punch_items"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     description: Mapped[str] = mapped_column(String(2000), nullable=False)
     location: Mapped[str | None] = mapped_column(String(200))

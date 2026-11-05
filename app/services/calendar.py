@@ -43,9 +43,7 @@ def next_working_day(day: date, holidays: frozenset[date] = frozenset()) -> date
     return day
 
 
-def add_working_days(
-    start: date, days: int, holidays: frozenset[date] = frozenset()
-) -> date:
+def add_working_days(start: date, days: int, holidays: frozenset[date] = frozenset()) -> date:
     """The date `days` working days after `start`.
 
     Counted inclusively from the first working day, which is what a builder means

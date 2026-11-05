@@ -37,7 +37,7 @@ class UserSummary(BaseModel):
     owners: int
     by_role: dict[str, int]
     never_signed_in: int
-    dormant: int              # active, and not signed in for 90 days
+    dormant: int  # active, and not signed in for 90 days
 
 
 class ProfileUpdate(BaseModel):

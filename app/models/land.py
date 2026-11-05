@@ -28,9 +28,9 @@ def _values(e):
 
 
 class LandPhaseStatus(StrEnum):
-    PLANNING = "planning"         # appraisal: is the deal worth doing
-    ENTITLEMENT = "entitlement"   # securing planning consent - the long pole
-    DEVELOPMENT = "development"   # infrastructure works: roads, drains, services
+    PLANNING = "planning"  # appraisal: is the deal worth doing
+    ENTITLEMENT = "entitlement"  # securing planning consent - the long pole
+    DEVELOPMENT = "development"  # infrastructure works: roads, drains, services
     COMPLETE = "complete"
     ON_HOLD = "on_hold"
 
@@ -38,26 +38,26 @@ class LandPhaseStatus(StrEnum):
 class PlanningStatus(StrEnum):
     NOT_SUBMITTED = "not_submitted"
     SUBMITTED = "submitted"
-    OUTLINE = "outline"                    # outline consent; reserved matters to follow
+    OUTLINE = "outline"  # outline consent; reserved matters to follow
     RESERVED_MATTERS = "reserved_matters"  # reserved matters approved: buildable
-    FULL = "full"                          # full permission: buildable
+    FULL = "full"  # full permission: buildable
     REFUSED = "refused"
     APPEAL = "appeal"
 
 
 class ObligationKind(StrEnum):
-    CONDITION = "condition"   # a planning condition to discharge
-    S106 = "s106"             # Section 106 planning obligation
-    CIL = "cil"               # Community Infrastructure Levy
-    S38 = "s38"               # road adoption agreement
-    S278 = "s278"             # works on the existing highway
-    S104 = "s104"             # sewer adoption agreement
+    CONDITION = "condition"  # a planning condition to discharge
+    S106 = "s106"  # Section 106 planning obligation
+    CIL = "cil"  # Community Infrastructure Levy
+    S38 = "s38"  # road adoption agreement
+    S278 = "s278"  # works on the existing highway
+    S104 = "s104"  # sewer adoption agreement
     OTHER = "other"
 
 
 class ObligationStatus(StrEnum):
     OUTSTANDING = "outstanding"
-    SUBMITTED = "submitted"   # sent to the council, awaiting sign-off
+    SUBMITTED = "submitted"  # sent to the council, awaiting sign-off
     DISCHARGED = "discharged"
     PAID = "paid"
     WAIVED = "waived"
@@ -68,9 +68,7 @@ OPEN_OBLIGATIONS = (ObligationStatus.OUTSTANDING, ObligationStatus.SUBMITTED)
 
 class LandProject(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "land_projects"
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "code", name="uq_land_projects_tenant_code"),
-    )
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_land_projects_tenant_code"),)
 
     code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -152,8 +150,11 @@ class LandProject(UUIDMixin, TenantMixin, TimestampMixin, Base):
         """GDV less land, infrastructure and build. The appraisal's bottom line."""
         if self.gdv is None:
             return None
-        return self.gdv - self.acquisition_cost - self.forecast_total - (
-            self.build_cost_estimate or Decimal("0")
+        return (
+            self.gdv
+            - self.acquisition_cost
+            - self.forecast_total
+            - (self.build_cost_estimate or Decimal("0"))
         )
 
     @property
@@ -182,8 +183,10 @@ class LandBudgetLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "land_budget_lines"
 
     project_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("land_projects.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("land_projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     category: Mapped[str] = mapped_column(String(120), nullable=False)
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -215,14 +218,16 @@ class LandObligation(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "land_obligations"
 
     project_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("land_projects.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("land_projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     kind: Mapped[ObligationKind] = mapped_column(
         Enum(ObligationKind, name="land_obligation_kind", values_callable=_values),
         nullable=False,
     )
-    reference: Mapped[str | None] = mapped_column(String(64))     # "Condition 7"
+    reference: Mapped[str | None] = mapped_column(String(64))  # "Condition 7"
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
     #: When it bites, in the council's words: "prior to commencement".
     trigger: Mapped[str | None] = mapped_column(String(300))

@@ -8,10 +8,13 @@ from app.api.v1 import (
     communities,
     compliance,
     cost_codes,
+    cost_inbox,
     crm,
     design_studio,
+    directory,
     documents,
     drawings,
+    estimate,
     field,
     health,
     intake,
@@ -20,17 +23,22 @@ from app.api.v1 import (
     land,
     marketing,
     meetings,
+    messaging,
     operations,
     options,
+    owner_invoices,
     plans,
     portal,
     purchasing,
     reporting,
     rfi,
     safety,
+    sales,
     schedule,
+    signoff,
     submittal,
     survey,
+    timeclock,
     users,
     vendors,
     warranty,
@@ -51,11 +59,15 @@ api_router.include_router(communities.router)
 api_router.include_router(plans.router)
 api_router.include_router(options.router)
 api_router.include_router(vendors.router)
+api_router.include_router(directory.router)
 
 # Sales and marketing
+# Before crm: its /leads/{lead_id} would otherwise swallow /leads/map.
+api_router.include_router(sales.router)
 api_router.include_router(crm.router)
 api_router.include_router(intake.router)
 api_router.include_router(design_studio.router)
+api_router.include_router(signoff.router)
 api_router.include_router(marketing.router)
 api_router.include_router(schedule.router)
 api_router.include_router(field.router)
@@ -63,8 +75,12 @@ api_router.include_router(field.router)
 # Job lifecycle
 api_router.include_router(jobs.router)
 api_router.include_router(purchasing.router)
+api_router.include_router(owner_invoices.router)
+api_router.include_router(cost_inbox.router)
 api_router.include_router(operations.router)
 api_router.include_router(documents.router)
+api_router.include_router(messaging.router)
+api_router.include_router(estimate.router)
 api_router.include_router(warranty.router)
 
 api_router.include_router(bidding.router)
@@ -74,6 +90,7 @@ api_router.include_router(land.items_router)
 
 # Prequalification, RFIs, submittals, drawings, safety, meetings, timecards
 api_router.include_router(labour.router)
+api_router.include_router(timeclock.router)
 api_router.include_router(safety.router)
 api_router.include_router(compliance.router)
 api_router.include_router(rfi.router)

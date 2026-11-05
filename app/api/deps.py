@@ -34,9 +34,7 @@ _credentials_error = HTTPException(
 async def get_current_user(
     request: Request,
     db: DbSession,
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Depends(bearer_scheme)
-    ] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)] = None,
 ) -> User:
     if credentials is None:
         raise _credentials_error
@@ -108,9 +106,7 @@ RequireSales = Annotated[
 RequirePurchasing = Annotated[
     User,
     Depends(
-        require_roles(
-            UserRole.OWNER, UserRole.ADMIN, UserRole.PURCHASING, UserRole.ACCOUNTING
-        )
+        require_roles(UserRole.OWNER, UserRole.ADMIN, UserRole.PURCHASING, UserRole.ACCOUNTING)
     ),
 ]
 
@@ -121,9 +117,7 @@ RequireAccounting = Annotated[
 RequireWarranty = Annotated[
     User,
     Depends(
-        require_roles(
-            UserRole.OWNER, UserRole.ADMIN, UserRole.WARRANTY, UserRole.SUPERINTENDENT
-        )
+        require_roles(UserRole.OWNER, UserRole.ADMIN, UserRole.WARRANTY, UserRole.SUPERINTENDENT)
     ),
 ]
 
@@ -169,9 +163,7 @@ RequireDesignTeam = Annotated[
 ]
 
 
-async def get_tenant_scoped(
-    db: AsyncSession, model: type, tenant_id: uuid.UUID, obj_id: uuid.UUID
-):
+async def get_tenant_scoped(db: AsyncSession, model: type, tenant_id: uuid.UUID, obj_id: uuid.UUID):
     """Fetch one row by id, scoped to the tenant. 404 if it belongs to anyone else.
 
     Returning 404 rather than 403 is deliberate: a cross-tenant 403 would confirm the

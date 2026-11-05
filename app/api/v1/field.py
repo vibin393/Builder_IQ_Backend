@@ -113,9 +113,7 @@ async def create_punch(payload: PunchCreate, db: DbSession, user: RequireStaff):
 
 
 @router.patch("/punch-items/{item_id}", response_model=PunchRead)
-async def update_punch(
-    item_id: uuid.UUID, payload: PunchUpdate, db: DbSession, user: RequireStaff
-):
+async def update_punch(item_id: uuid.UUID, payload: PunchUpdate, db: DbSession, user: RequireStaff):
     """Correct a defect. Status is not settable here - it moves through the routes
     below, which record who accepted the fix."""
     return await FieldService(db, user.tenant_id).update_punch(
@@ -124,9 +122,7 @@ async def update_punch(
 
 
 @router.post("/punch-items/{item_id}/assign", response_model=PunchRead)
-async def assign_punch(
-    item_id: uuid.UUID, payload: AssignPunch, db: DbSession, user: RequireStaff
-):
+async def assign_punch(item_id: uuid.UUID, payload: AssignPunch, db: DbSession, user: RequireStaff):
     """Give the defect to a trade.
 
     Assigning it is what lets the work be backcharged rather than absorbed, and it
@@ -159,9 +155,7 @@ async def verify_punch(item_id: uuid.UUID, db: DbSession, user: RequireStaff):
 
 
 @router.post("/punch-items/{item_id}/reject", response_model=PunchRead)
-async def reject_punch(
-    item_id: uuid.UUID, payload: PunchReason, db: DbSession, user: RequireStaff
-):
+async def reject_punch(item_id: uuid.UUID, payload: PunchReason, db: DbSession, user: RequireStaff):
     """Send the fix back, with what is still wrong."""
     return await FieldService(db, user.tenant_id).reject_punch(item_id, payload.reason)
 
@@ -177,9 +171,7 @@ async def wont_fix(item_id: uuid.UUID, payload: PunchReason, db: DbSession, user
 
 
 @router.post("/punch-items/{item_id}/reopen", response_model=PunchRead)
-async def reopen_punch(
-    item_id: uuid.UUID, payload: PunchReason, db: DbSession, user: RequireStaff
-):
+async def reopen_punch(item_id: uuid.UUID, payload: PunchReason, db: DbSession, user: RequireStaff):
     return await FieldService(db, user.tenant_id).reopen_punch(item_id, payload.reason)
 
 
@@ -227,9 +219,7 @@ async def add_check(
 
 
 @router.post("/inspections/items/{item_id}/result", response_model=CheckRead)
-async def record_check(
-    item_id: uuid.UUID, payload: CheckResult, db: DbSession, user: RequireStaff
-):
+async def record_check(item_id: uuid.UUID, payload: CheckResult, db: DbSession, user: RequireStaff):
     """Record how one check went. A failure needs a note saying what to fix."""
     return await FieldService(db, user.tenant_id).record_check(
         item_id, payload.result, payload.notes

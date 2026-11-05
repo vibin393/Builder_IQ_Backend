@@ -146,9 +146,7 @@ async def job_cost_summary(
     pending = await pending_change_by_cost_code(db, tenant_id, job_id)
     retained, released = await retainage_totals(db, tenant_id, job_id)
 
-    code_ids = (
-        {line.cost_code_id for line in lines} | set(committed) | set(actual) | set(pending)
-    )
+    code_ids = {line.cost_code_id for line in lines} | set(committed) | set(actual) | set(pending)
     codes = (
         {c.id: c for c in await db.scalars(select(CostCode).where(CostCode.id.in_(code_ids)))}
         if code_ids

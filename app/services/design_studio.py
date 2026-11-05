@@ -84,6 +84,7 @@ SIGNATURE_MOVES: dict[SignatureStatus, tuple[SignatureStatus, ...]] = {
 #: is still urgent.
 CUTOFF_WARNING_DAYS = 30
 
+
 class AppointmentRepository(TenantRepository[DesignAppointment]):
     model = DesignAppointment
     label = "Appointment"
@@ -119,9 +120,7 @@ class SignatureRepository(TenantRepository[SignatureRequest]):
     search_fields = ("document_name", "signer_name", "signer_email")
 
     async def page(self, params: PageParams, **filters):
-        return await self.paginate(
-            params, order_by=SignatureRequest.created_at.desc(), **filters
-        )
+        return await self.paginate(params, order_by=SignatureRequest.created_at.desc(), **filters)
 
     async def counts(self) -> dict:
         rows = await self.db.execute(
@@ -154,9 +153,7 @@ class DesignStudioService:
         """
         job = await self.jobs.get(job_id)
         contract = await self.db.scalar(
-            select(Contract).where(
-                Contract.tenant_id == self.tenant_id, Contract.job_id == job_id
-            )
+            select(Contract).where(Contract.tenant_id == self.tenant_id, Contract.job_id == job_id)
         )
 
         rows = await self.db.execute(
@@ -196,9 +193,7 @@ class DesignStudioService:
         """
         await self.jobs.require_exists(job_id)
         contract = await self.db.scalar(
-            select(Contract).where(
-                Contract.tenant_id == self.tenant_id, Contract.job_id == job_id
-            )
+            select(Contract).where(Contract.tenant_id == self.tenant_id, Contract.job_id == job_id)
         )
         if contract is None:
             raise BusinessRuleViolation(
@@ -265,8 +260,7 @@ class DesignStudioService:
         if scheduled_for < datetime.now(UTC):
             raise BusinessRuleViolation(
                 "That appointment is in the past.",
-                "Book a future slot, or record what happened at a past one by "
-                "completing it.",
+                "Book a future slot, or record what happened at a past one by completing it.",
             )
 
         if data.get("consultant_id"):
@@ -285,9 +279,7 @@ class DesignStudioService:
             if contract is not None:
                 data["buyer_id"] = contract.buyer_id
 
-        return await self.appointments.create(
-            job_id=job_id, scheduled_for=scheduled_for, **data
-        )
+        return await self.appointments.create(job_id=job_id, scheduled_for=scheduled_for, **data)
 
     async def reschedule(
         self, appointment_id: uuid.UUID, when: datetime, note: str | None = None
@@ -300,15 +292,11 @@ class DesignStudioService:
         """
         old = await self.appointments.get(appointment_id)
         if not old.is_open:
-            raise Conflict(
-                f"That appointment is already {old.status.value.replace('_', ' ')}."
-            )
+            raise Conflict(f"That appointment is already {old.status.value.replace('_', ' ')}.")
         if when.tzinfo is None:
             when = when.replace(tzinfo=UTC)
         if when < datetime.now(UTC):
-            raise BusinessRuleViolation(
-                "That appointment is in the past.", "Pick a future slot."
-            )
+            raise BusinessRuleViolation("That appointment is in the past.", "Pick a future slot.")
 
         old.status = AppointmentStatus.CANCELLED
         old.outcome_note = note or "Rescheduled."
@@ -413,9 +401,7 @@ class DesignStudioService:
         moved - and by then somebody is paying for it either way.
         """
         option = await self.db.scalar(
-            select(Option).where(
-                Option.tenant_id == self.tenant_id, Option.id == option_id
-            )
+            select(Option).where(Option.tenant_id == self.tenant_id, Option.id == option_id)
         )
         if option is None:
             raise NotFound("Option", option_id)
@@ -425,8 +411,7 @@ class DesignStudioService:
         cutoff = await self.structural_cutoff_for(job_id)
         if cutoff and cutoff < date.today():
             raise BusinessRuleViolation(
-                f"{option.name} is structural, and the cutoff for this home was "
-                f"{cutoff:%d %b %Y}.",
+                f"{option.name} is structural, and the cutoff for this home was {cutoff:%d %b %Y}.",
                 "Structural choices have to be made before the frame goes up. This "
                 "one now needs a change order, which will carry its own price and "
                 "schedule impact.",
@@ -460,9 +445,7 @@ class DesignStudioService:
         """
         request = await self.signatures.get(request_id)
         if not request.is_outstanding:
-            raise Conflict(
-                f"That document is {request.status.value}; there is nothing to chase."
-            )
+            raise Conflict(f"That document is {request.status.value}; there is nothing to chase.")
         request.reminders_sent += 1
         request.last_reminder_at = datetime.now(UTC)
         await self.db.commit()
@@ -537,9 +520,7 @@ class DesignStudioService:
             raise Conflict("That document has already been signed.")
         raise BusinessRuleViolation(
             f"A {request.status.value} document cannot be marked {to.value}.",
-            "Next steps from here: "
-            + (", ".join(s.value for s in allowed) or "none")
-            + ".",
+            "Next steps from here: " + (", ".join(s.value for s in allowed) or "none") + ".",
         )
 
     # ==================================================== the summary =====
@@ -555,32 +536,36 @@ class DesignStudioService:
         appointments = await self.appointments.counts()
         signatures = await self.signatures.counts()
 
-        outstanding = await self.db.scalar(
-            select(func.count())
-            .select_from(SignatureRequest)
-            .where(
-                SignatureRequest.tenant_id == self.tenant_id,
-                SignatureRequest.status.in_(
-                    (SignatureStatus.SENT, SignatureStatus.VIEWED)
-                ),
+        outstanding = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(SignatureRequest)
+                .where(
+                    SignatureRequest.tenant_id == self.tenant_id,
+                    SignatureRequest.status.in_((SignatureStatus.SENT, SignatureStatus.VIEWED)),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         # Buyers who are about to lose the ability to change anything structural.
         # Thirty days is the window a studio actually works to: long enough to get
         # somebody in, short enough that it is still urgent.
         soon = today + timedelta(days=CUTOFF_WARNING_DAYS)
-        cutoff_soon = await self.db.scalar(
-            select(func.count())
-            .select_from(DesignAppointment)
-            .where(
-                DesignAppointment.tenant_id == self.tenant_id,
-                DesignAppointment.status == AppointmentStatus.SCHEDULED,
-                DesignAppointment.structural_cutoff.is_not(None),
-                DesignAppointment.structural_cutoff >= today,
-                DesignAppointment.structural_cutoff <= soon,
+        cutoff_soon = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(DesignAppointment)
+                .where(
+                    DesignAppointment.tenant_id == self.tenant_id,
+                    DesignAppointment.status == AppointmentStatus.SCHEDULED,
+                    DesignAppointment.structural_cutoff.is_not(None),
+                    DesignAppointment.structural_cutoff >= today,
+                    DesignAppointment.structural_cutoff <= soon,
+                )
             )
-        ) or 0
+            or 0
+        )
 
         return {
             "appointments": appointments,

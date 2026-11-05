@@ -154,9 +154,7 @@ class JobService:
 
         existing = await self.jobs.live_on_lot(data["lot_id"])
         if existing is not None:
-            raise Conflict(
-                f"Plot {lot.lot_number} already has home {existing.job_number} on it."
-            )
+            raise Conflict(f"Plot {lot.lot_number} already has home {existing.job_number} on it.")
 
         if data.get("superintendent_id"):
             await self._require_colleague(data["superintendent_id"])
@@ -189,7 +187,8 @@ class JobService:
             plan_id = data.get("plan_id") or job.plan_id
             elevation = data["elevation"] if "elevation" in data else job.elevation
             checked = await self._check_plan(
-                plan_id, elevation,
+                plan_id,
+                elevation,
                 new_home=bool(data.get("plan_id")) and data.get("plan_id") != job.plan_id,
             )
             if "elevation" in data or data.get("plan_id"):
@@ -204,9 +203,7 @@ class JobService:
                 )
         return await self.jobs.update(job, **data)
 
-    async def assign_superintendent(
-        self, job_id: uuid.UUID, user_id: uuid.UUID | None
-    ) -> Job:
+    async def assign_superintendent(self, job_id: uuid.UUID, user_id: uuid.UUID | None) -> Job:
         """Put a superintendent on the home, or take one off."""
         job = await self.jobs.get(job_id)
         if user_id:
@@ -363,9 +360,7 @@ class JobService:
         await self.db.commit()
         return await self.jobs.get(job_id)
 
-    async def hold(
-        self, job_id: uuid.UUID, reason: HoldReason, note: str | None = None
-    ) -> Job:
+    async def hold(self, job_id: uuid.UUID, reason: HoldReason, note: str | None = None) -> Job:
         """Stop the build, with a reason that can be counted later."""
         job = await self.jobs.get(job_id)
         self._require_transition(job, JobStatus.ON_HOLD)
@@ -545,8 +540,7 @@ class JobService:
         if reason is CancellationReason.OTHER and not (note or "").strip():
             raise BusinessRuleViolation(
                 "A cancellation reason of 'other' needs a note.",
-                "Cancellations are counted by cause; an uncounted one teaches "
-                "nobody anything.",
+                "Cancellations are counted by cause; an uncounted one teaches nobody anything.",
             )
 
         job.status = JobStatus.CANCELLED

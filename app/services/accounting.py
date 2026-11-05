@@ -186,14 +186,15 @@ def build(
                 account = (code.gl_account if code else None) or cfg.cost_account
                 if code is None or not code.gl_account:
                     label = code.code if code else "an unknown cost code"
-                    warnings.append(
-                        f"{label} has no nominal code; posts to {cfg.cost_account}."
-                    )
+                    warnings.append(f"{label} has no nominal code; posts to {cfg.cost_account}.")
                 name = f"{code.code} {code.name}" if code else "Cost"
                 line(account, dr=ln.amount, details=f"{who} · {name}")
             if retention > 0:
-                line(cfg.retention_account, cr=retention,
-                     details=f"{who} · retention {inv.retainage_percent.normalize()}%")
+                line(
+                    cfg.retention_account,
+                    cr=retention,
+                    details=f"{who} · retention {inv.retainage_percent.normalize()}%",
+                )
             line(cfg.creditors_account, cr=inv.total - retention, details=f"{who} · invoice")
 
         elif kind is ExportKind.PAYMENTS:
@@ -204,8 +205,11 @@ def build(
             ref = f" · {inv.payment_reference}" if inv.payment_reference else ""
             line(cfg.creditors_account, dr=cleared, details=f"{who} · payment{ref}")
             if cis > 0:
-                line(cfg.cis_account, cr=cis,
-                     details=f"{who} · CIS {inv.cis_rate.normalize()}% of labour")
+                line(
+                    cfg.cis_account,
+                    cr=cis,
+                    details=f"{who} · CIS {inv.cis_rate.normalize()}% of labour",
+                )
             line(cfg.bank_account, cr=cleared - cis, details=f"{who} · payment{ref}")
 
         else:
@@ -244,36 +248,92 @@ def render(journal: list[JournalLine], fmt: ExportFormat, batch_number: str) -> 
 
     if fmt is ExportFormat.SAGE50:
         # Sage 50 Accounts audit-trail import: JD / JC journal rows, one per side.
-        w.writerow(["Type", "Account Reference", "Nominal A/C Ref", "Department Code", "Date",
-                    "Reference", "Details", "Net Amount", "Tax Code", "Tax Amount"])
+        w.writerow(
+            [
+                "Type",
+                "Account Reference",
+                "Nominal A/C Ref",
+                "Department Code",
+                "Date",
+                "Reference",
+                "Details",
+                "Net Amount",
+                "Tax Code",
+                "Tax Amount",
+            ]
+        )
         for j in journal:
             is_dr = j.debit > 0
-            w.writerow([
-                "JD" if is_dr else "JC", j.account, j.account, "",
-                j.posting_date.strftime("%d/%m/%Y"), j.reference[:30],
-                f"{j.job_number or ''} {j.details}".strip()[:60],
-                j.debit if is_dr else j.credit, "T9", "0.00",
-            ])
+            w.writerow(
+                [
+                    "JD" if is_dr else "JC",
+                    j.account,
+                    j.account,
+                    "",
+                    j.posting_date.strftime("%d/%m/%Y"),
+                    j.reference[:30],
+                    f"{j.job_number or ''} {j.details}".strip()[:60],
+                    j.debit if is_dr else j.credit,
+                    "T9",
+                    "0.00",
+                ]
+            )
     elif fmt is ExportFormat.XERO:
         # Xero manual journal import: signed amounts, the home as a tracking category.
-        w.writerow(["*Narration", "*Date", "Description", "*AccountCode", "*TaxRate",
-                    "*Amount", "TrackingName1", "TrackingOption1"])
+        w.writerow(
+            [
+                "*Narration",
+                "*Date",
+                "Description",
+                "*AccountCode",
+                "*TaxRate",
+                "*Amount",
+                "TrackingName1",
+                "TrackingOption1",
+            ]
+        )
         for j in journal:
             amount = j.debit if j.debit > 0 else -j.credit
-            w.writerow([
-                f"{batch_number} {j.reference}", j.posting_date.strftime("%d/%m/%Y"),
-                j.details, j.account, "No VAT", amount,
-                "Job" if j.job_number else "", j.job_number or "",
-            ])
+            w.writerow(
+                [
+                    f"{batch_number} {j.reference}",
+                    j.posting_date.strftime("%d/%m/%Y"),
+                    j.details,
+                    j.account,
+                    "No VAT",
+                    amount,
+                    "Job" if j.job_number else "",
+                    j.job_number or "",
+                ]
+            )
     else:
-        w.writerow(["batch", "date", "account", "debit", "credit", "job", "reference",
-                    "details", "supplier"])
+        w.writerow(
+            [
+                "batch",
+                "date",
+                "account",
+                "debit",
+                "credit",
+                "job",
+                "reference",
+                "details",
+                "supplier",
+            ]
+        )
         for j in journal:
-            w.writerow([
-                batch_number, j.posting_date.isoformat(), j.account,
-                j.debit or "", j.credit or "", j.job_number or "", j.reference,
-                j.details, j.supplier_code or "",
-            ])
+            w.writerow(
+                [
+                    batch_number,
+                    j.posting_date.isoformat(),
+                    j.account,
+                    j.debit or "",
+                    j.credit or "",
+                    j.job_number or "",
+                    j.reference,
+                    j.details,
+                    j.supplier_code or "",
+                ]
+            )
     return buf.getvalue()
 
 

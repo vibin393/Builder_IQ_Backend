@@ -163,9 +163,7 @@ async def submit_observation(
     The resolution is required here rather than at closing, because the person who
     did the work knows what they did. Asking the reviewer produces "fixed".
     """
-    return await SafetyService(db, user.tenant_id).submit_observation(
-        obs_id, payload.resolution
-    )
+    return await SafetyService(db, user.tenant_id).submit_observation(obs_id, payload.resolution)
 
 
 @router.post("/observations/{obs_id}/close", response_model=ObservationRead)
@@ -376,6 +374,4 @@ async def sign_off_action_item(
     Refused if you completed it yourself. The point of a sign-off step is a second
     pair of eyes.
     """
-    return await SafetyService(db, user.tenant_id).sign_off_step(
-        plan_id, item_id, actor_id=user.id
-    )
+    return await SafetyService(db, user.tenant_id).sign_off_step(plan_id, item_id, actor_id=user.id)

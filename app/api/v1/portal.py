@@ -80,9 +80,7 @@ async def portal_identity(db: DbSession, user: CurrentUser):
         .select_from(ServiceOrder)
         .where(
             ServiceOrder.vendor_id == vendor.id,
-            ServiceOrder.status.in_(
-                (ServiceOrderStatus.ASSIGNED, ServiceOrderStatus.SCHEDULED)
-            ),
+            ServiceOrder.status.in_((ServiceOrderStatus.ASSIGNED, ServiceOrderStatus.SCHEDULED)),
         )
     )
 
@@ -198,9 +196,7 @@ async def job_summary(job_id: uuid.UUID, db: DbSession, user: CurrentUser):
     if not (has_work or has_tasks):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    job = await db.scalar(
-        select(Job).where(Job.id == job_id, Job.tenant_id == user.tenant_id)
-    )
+    job = await db.scalar(select(Job).where(Job.id == job_id, Job.tenant_id == user.tenant_id))
     if job is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 

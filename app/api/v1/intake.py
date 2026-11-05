@@ -222,9 +222,7 @@ async def pause_source(source_id: uuid.UUID, db: DbSession, admin: RequireAdmin)
     What you reach for when a form starts taking bot traffic: the key stays valid,
     the history stays, and nothing new is captured until it is resumed.
     """
-    return await IntakeService(db, admin.tenant_id).set_active(
-        source_id, False, actor_id=admin.id
-    )
+    return await IntakeService(db, admin.tenant_id).set_active(source_id, False, actor_id=admin.id)
 
 
 @router.post("/intake/sources/{source_id}/resume", response_model=IntakeSourceRead)

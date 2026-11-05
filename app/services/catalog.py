@@ -93,9 +93,7 @@ class CatalogService:
         return await self.cost_codes.archive(obj, actor_id, reason)
 
     async def restore_cost_code(self, code_id: uuid.UUID):
-        return await self.cost_codes.restore(
-            await self.cost_codes.get(code_id)
-        )
+        return await self.cost_codes.restore(await self.cost_codes.get(code_id))
 
     async def _cost_code_usage(self, code_id: uuid.UUID) -> str:
         """A readable summary of what still references this code, or ""."""
@@ -123,11 +121,14 @@ class CatalogService:
             (BidPackage, "bid package"),
         )
         for model, noun in pairs:
-            n = await self.db.scalar(
-                select(func.count())
-                .select_from(model)
-                .where(model.tenant_id == self.tenant_id, model.cost_code_id == code_id)
-            ) or 0
+            n = (
+                await self.db.scalar(
+                    select(func.count())
+                    .select_from(model)
+                    .where(model.tenant_id == self.tenant_id, model.cost_code_id == code_id)
+                )
+                or 0
+            )
             if n:
                 counts.append(f"{n} {noun}{'s' if n != 1 else ''}")
         return " and ".join(counts)
@@ -186,14 +187,17 @@ class CatalogService:
 
         from app.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
 
-        return await self.db.scalar(
-            select(func.count())
-            .select_from(PurchaseOrder)
-            .where(
-                PurchaseOrder.tenant_id == self.tenant_id,
-                PurchaseOrder.vendor_id == vendor_id,
-                PurchaseOrder.status.in_(
-                    (PurchaseOrderStatus.ISSUED, PurchaseOrderStatus.ACKNOWLEDGED)
-                ),
+        return (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(PurchaseOrder)
+                .where(
+                    PurchaseOrder.tenant_id == self.tenant_id,
+                    PurchaseOrder.vendor_id == vendor_id,
+                    PurchaseOrder.status.in_(
+                        (PurchaseOrderStatus.ISSUED, PurchaseOrderStatus.ACKNOWLEDGED)
+                    ),
+                )
             )
-        ) or 0
+            or 0
+        )

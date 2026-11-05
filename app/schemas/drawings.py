@@ -163,13 +163,13 @@ class TransmittalRead(ORMModel):
 
 class DrawingsSummary(BaseModel):
     draft_sets: int
-    live_sets: int             # issued
+    live_sets: int  # issued
     superseded_sets: int
-    total_sheets: int          # sheets across live sets
-    specifications: int        # current specifications
+    total_sheets: int  # sheets across live sets
+    specifications: int  # current specifications
     draft_specs: int
     transmittals: int
-    unacknowledged: int        # recipients yet to confirm, across all transmittals
+    unacknowledged: int  # recipients yet to confirm, across all transmittals
     overdue_transmittals: int  # past response due with someone still outstanding
-    by_discipline: dict[str, int]   # sheets by discipline across live sets
+    by_discipline: dict[str, int]  # sheets by discipline across live sets
     by_purpose: dict[str, int]

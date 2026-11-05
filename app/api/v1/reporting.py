@@ -112,9 +112,7 @@ async def dashboard(
     )
 
     # Construction
-    jobs_building = await count(
-        Job, Job.status == JobStatus.UNDER_CONSTRUCTION, *by_job(Job.id)
-    )
+    jobs_building = await count(Job, Job.status == JobStatus.UNDER_CONSTRUCTION, *by_job(Job.id))
     jobs_closed = await count(Job, Job.status == JobStatus.CLOSED, *by_job(Job.id))
     jobs_total = await count(Job, *by_job(Job.id))
 
@@ -230,9 +228,7 @@ async def dashboard(
     # over it is how the chase list stops being believed.
     observations_overdue = await count(
         Observation,
-        Observation.status.in_(
-            (ObservationStatus.INITIATED, ObservationStatus.NOT_ACCEPTED)
-        ),
+        Observation.status.in_((ObservationStatus.INITIATED, ObservationStatus.NOT_ACCEPTED)),
         Observation.due_on < date.today(),
         *by_job(Observation.job_id),
     )
@@ -355,8 +351,11 @@ async def trade_scorecard(
         if current is None:
             db.add(
                 ScorecardSnapshot(
-                    tenant_id=user.tenant_id, vendor_id=r["vendor_id"], period=this_month,
-                    overall=r["overall"], dimensions=dims,
+                    tenant_id=user.tenant_id,
+                    vendor_id=r["vendor_id"],
+                    period=this_month,
+                    overall=r["overall"],
+                    dimensions=dims,
                 )
             )
         else:
@@ -420,9 +419,7 @@ async def scorecard_history(vendor_id: uuid.UUID, db: DbSession, user: RequireSt
         .order_by(ScorecardSnapshot.period.desc())
         .limit(24)
     )
-    return [
-        {"period": r.period, "overall": r.overall, "dimensions": r.dimensions} for r in rows
-    ]
+    return [{"period": r.period, "overall": r.overall, "dimensions": r.dimensions} for r in rows]
 
 
 @router.get("/sales-pipeline")

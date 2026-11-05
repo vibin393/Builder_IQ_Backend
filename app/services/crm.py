@@ -47,6 +47,7 @@ from app.repositories.crm import (
     RealtorRepository,
 )
 from app.schemas.common import PageParams
+from app.services import geocoding
 
 #: Which statuses a lead may move to from where it is now.
 #:
@@ -172,7 +173,19 @@ class CrmService:
             f"Lead captured from {lead.source.value.replace('_', ' ')}.",
             system=True,
         )
+        await self._geocode(lead)
         return await self.leads.get(lead.id)
+
+    async def _geocode(self, lead) -> None:
+        """Best-effort: turn the lead's address into map coordinates. Never raises —
+        a lead that cannot be geocoded simply does not appear on the map yet."""
+        if lead.latitude is not None or lead.longitude is not None:
+            return
+        query = geocoding.build_query(lead.address, lead.city, lead.postcode)
+        coords = await geocoding.geocode(query)
+        if coords:
+            lead.latitude, lead.longitude = coords
+            await self.db.commit()
 
     async def update_lead(self, lead_id: uuid.UUID, *, actor_id=None, **data) -> Lead:
         """Edit a lead's details.
@@ -186,7 +199,16 @@ class CrmService:
         await self._require_references(data)
         if data.get("email"):
             data["email"] = str(data["email"])
-        return await self.leads.update(lead, updated_by_id=actor_id, **data)
+        # If the address changed and no explicit coordinates were given, re-geocode.
+        location_changed = any(k in data for k in ("address", "city", "postcode"))
+        coords_given = "latitude" in data or "longitude" in data
+        if location_changed and not coords_given:
+            data["latitude"] = None
+            data["longitude"] = None
+        updated = await self.leads.update(lead, updated_by_id=actor_id, **data)
+        if location_changed and not coords_given:
+            await self._geocode(updated)
+        return updated
 
     async def _link_campaign(self, data: dict) -> None:
         """Attach the lead to a campaign whose code matches its tag.
@@ -290,9 +312,7 @@ class CrmService:
             "Next steps from here: " + ", ".join(s.value for s in allowed) + ".",
         )
 
-    async def assign(
-        self, lead_id: uuid.UUID, user_id: uuid.UUID | None, *, actor_id=None
-    ) -> Lead:
+    async def assign(self, lead_id: uuid.UUID, user_id: uuid.UUID | None, *, actor_id=None) -> Lead:
         """Put somebody's name on a lead, or take it off.
 
         A user_id of None unassigns, which is a real action - a salesperson
@@ -518,8 +538,7 @@ class CrmService:
             lead,
             actor_id,
             ActivityType.STATUS_CHANGE,
-            f"Marked lost: {reason.strip()}"
-            + (f" (to {lost_to})" if lost_to else ""),
+            f"Marked lost: {reason.strip()}" + (f" (to {lost_to})" if lost_to else ""),
         )
         return await self.leads.get(lead_id)
 
@@ -602,9 +621,7 @@ class CrmService:
         lead.next_follow_up = None
         await self.db.commit()
 
-        await self._log(
-            lead, actor_id, ActivityType.STATUS_CHANGE, "Converted to buyer."
-        )
+        await self._log(lead, actor_id, ActivityType.STATUS_CHANGE, "Converted to buyer.")
         return await self.leads.get(lead_id)
 
     async def archive_lead(self, lead_id: uuid.UUID, actor_id, reason=None) -> Lead:
@@ -693,10 +710,8 @@ class CrmService:
         open_leads = await self._open_leads_for_realtor(realtor_id)
         if open_leads:
             raise BusinessRuleViolation(
-                f"{agent.name} still has {open_leads} open lead"
-                f"{'s' if open_leads != 1 else ''}.",
-                "Close or reassign those first - there is a commission riding on "
-                "each of them.",
+                f"{agent.name} still has {open_leads} open lead{'s' if open_leads != 1 else ''}.",
+                "Close or reassign those first - there is a commission riding on each of them.",
             )
         return await self.realtors.archive(agent, actor_id, reason)
 
@@ -706,15 +721,18 @@ class CrmService:
     async def _open_leads_for_realtor(self, realtor_id: uuid.UUID) -> int:
         from sqlalchemy import func, select
 
-        return await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(
-                Lead.tenant_id == self.tenant_id,
-                Lead.realtor_id == realtor_id,
-                Lead.status.in_(OPEN_STATUSES),
+        return (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(
+                    Lead.tenant_id == self.tenant_id,
+                    Lead.realtor_id == realtor_id,
+                    Lead.status.in_(OPEN_STATUSES),
+                )
             )
-        ) or 0
+            or 0
+        )
 
     # ========================================================= helpers =====
 

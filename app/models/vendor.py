@@ -33,8 +33,8 @@ class CISStatus(StrEnum):
     payment at the rate HMRC gives on verification, and pay it over monthly.
     """
 
-    GROSS = "gross"            # gross payment status — no deduction
-    NET = "net"                # registered — 20% deducted from labour
+    GROSS = "gross"  # gross payment status — no deduction
+    NET = "net"  # registered — 20% deducted from labour
     UNVERIFIED = "unverified"  # not registered / not matched — 30% deducted from labour
 
 
@@ -73,7 +73,7 @@ class Vendor(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, AuditedMix
     cis_status: Mapped[CISStatus | None] = mapped_column(
         Enum(CISStatus, name="vendor_cis_status", values_callable=lambda e: [m.value for m in e])
     )
-    utr: Mapped[str | None] = mapped_column(String(20))   # Unique Taxpayer Reference
+    utr: Mapped[str | None] = mapped_column(String(20))  # Unique Taxpayer Reference
 
     # --- the business itself ---------------------------------------------------
     address: Mapped[str | None] = mapped_column(String(300))
@@ -97,8 +97,10 @@ class VendorContact(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "vendor_contacts"
 
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     role: Mapped[str | None] = mapped_column(String(100))
@@ -116,10 +118,14 @@ class VendorSpecialism(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )

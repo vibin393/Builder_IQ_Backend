@@ -226,15 +226,25 @@ async def create_submittal(payload: SubmittalCreate, db: DbSession, user: Requir
 
     db.add(obj)
     await db.flush()
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.CREATED,
-        f"Raised as {obj.submittal_type.value}.", user.id,
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id,
+            obj.id,
+            SubmittalActivityKind.CREATED,
+            f"Raised as {obj.submittal_type.value}.",
+            user.id,
+        )
+    )
     if payload.submit_now:
-        db.add(submittal_service.log(
-            user.tenant_id, obj.id, SubmittalActivityKind.SUBMITTED,
-            "Submitted for review.", user.id,
-        ))
+        db.add(
+            submittal_service.log(
+                user.tenant_id,
+                obj.id,
+                SubmittalActivityKind.SUBMITTED,
+                "Submitted for review.",
+                user.id,
+            )
+        )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -252,9 +262,9 @@ async def update_submittal(
     await _validate_links(db, user.tenant_id, payload)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(obj, field, value)
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.EDITED, None, user.id
-    ))
+    db.add(
+        submittal_service.log(user.tenant_id, obj.id, SubmittalActivityKind.EDITED, None, user.id)
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -276,9 +286,15 @@ async def submit_submittal(sub_id: uuid.UUID, db: DbSession, user: RequireStaff)
     obj.submitted_on = today
     obj.due_on = obj.due_on or submittal_service.due_date_for(today, obj.priority)
     obj.ball_in_court = BallInCourt.BUILDER
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.SUBMITTED, "Submitted for review.", user.id
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id,
+            obj.id,
+            SubmittalActivityKind.SUBMITTED,
+            "Submitted for review.",
+            user.id,
+        )
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -294,9 +310,11 @@ async def start_review(sub_id: uuid.UUID, db: DbSession, user: RequireDesignTeam
         )
     obj.status = SubmittalStatus.UNDER_REVIEW
     obj.reviewer_id = user.id
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.REVIEW_STARTED, "Review started.", user.id
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id, obj.id, SubmittalActivityKind.REVIEW_STARTED, "Review started.", user.id
+        )
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -316,13 +334,13 @@ async def review_submittal(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A review decision must be approved, approved-as-noted, "
-                   "revise-and-resubmit or rejected.",
+            "revise-and-resubmit or rejected.",
         )
     if obj.status not in submittal_service.IN_REVIEW:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Only a submitted or under-review item can be decided; "
-                   f"this one is {obj.status.value}.",
+            f"this one is {obj.status.value}.",
         )
 
     today = date.today()
@@ -332,32 +350,39 @@ async def review_submittal(
     obj.reviewer_id = user.id
 
     # Close the round into the history.
-    db.add(SubmittalRevision(
-        tenant_id=user.tenant_id,
-        submittal_id=obj.id,
-        revision=obj.revision,
-        outcome=payload.status,
-        submitted_on=obj.submitted_on,
-        returned_on=today,
-        reviewer_id=user.id,
-        review_notes=payload.review_notes,
-        storage_key=obj.storage_key,
-    ))
+    db.add(
+        SubmittalRevision(
+            tenant_id=user.tenant_id,
+            submittal_id=obj.id,
+            revision=obj.revision,
+            outcome=payload.status,
+            submitted_on=obj.submitted_on,
+            returned_on=today,
+            reviewer_id=user.id,
+            review_notes=payload.review_notes,
+            storage_key=obj.storage_key,
+        )
+    )
 
     if payload.status is SubmittalStatus.REVISE_AND_RESUBMIT:
         obj.revision += 1
         obj.ball_in_court = BallInCourt.TRADE
-        obj.submitted_on = None       # the new round has not been submitted yet
+        obj.submitted_on = None  # the new round has not been submitted yet
         obj.returned_on = None
     else:
         obj.ball_in_court = BallInCourt.CLOSED
         if payload.status is SubmittalStatus.APPROVED:
             obj.approved_on = today
 
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, DECISION_KIND[payload.status],
-        payload.review_notes or None, user.id,
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id,
+            obj.id,
+            DECISION_KIND[payload.status],
+            payload.review_notes or None,
+            user.id,
+        )
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -373,7 +398,7 @@ async def resubmit_submittal(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Only an item sent back to revise can be resubmitted; "
-                   f"this one is {obj.status.value}.",
+            f"this one is {obj.status.value}.",
         )
     today = date.today()
     obj.status = SubmittalStatus.SUBMITTED
@@ -387,9 +412,11 @@ async def resubmit_submittal(
     detail = f"Revision {obj.revision} resubmitted."
     if payload.note:
         detail += f" {payload.note}"
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.RESUBMITTED, detail, user.id
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id, obj.id, SubmittalActivityKind.RESUBMITTED, detail, user.id
+        )
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)
 
@@ -409,8 +436,10 @@ async def reassign_submittal(
     detail = f"Ball moved to {payload.ball_in_court.value}."
     if payload.note:
         detail += f" {payload.note}"
-    db.add(submittal_service.log(
-        user.tenant_id, obj.id, SubmittalActivityKind.REASSIGNED, detail, user.id
-    ))
+    db.add(
+        submittal_service.log(
+            user.tenant_id, obj.id, SubmittalActivityKind.REASSIGNED, detail, user.id
+        )
+    )
     await db.commit()
     return await _load(db, user.tenant_id, obj.id)

@@ -79,13 +79,12 @@ def tier(overall: int | None) -> str | None:
 async def weights_for(db: AsyncSession, tenant_id: uuid.UUID) -> dict[str, int]:
     from app.models.scorecard import ScorecardSettings
 
-    row = await db.scalar(
-        select(ScorecardSettings).where(ScorecardSettings.tenant_id == tenant_id)
-    )
+    row = await db.scalar(select(ScorecardSettings).where(ScorecardSettings.tenant_id == tenant_id))
     merged = dict(WEIGHTS)
     if row is not None:
         merged.update({k: int(v) for k, v in row.weights.items() if k in WEIGHTS})
     return merged
+
 
 OPEN_OBSERVATIONS = (ObservationStatus.INITIATED, ObservationStatus.NOT_ACCEPTED)
 
@@ -94,7 +93,7 @@ OPEN_OBSERVATIONS = (ObservationStatus.INITIATED, ObservationStatus.NOT_ACCEPTED
 class Dimension:
     """One measured axis: a score, how much evidence it rests on, and why."""
 
-    score: int | None          # None = no history, excluded from the composite
+    score: int | None  # None = no history, excluded from the composite
     sample: int
     detail: str
     facts: dict[str, object] = field(default_factory=dict)
@@ -138,9 +137,7 @@ async def scorecard(
     # --- quality -----------------------------------------------------------
     punch = list(
         await db.scalars(
-            select(PunchItem).where(
-                PunchItem.tenant_id == tenant_id, PunchItem.vendor_id.in_(ids)
-            )
+            select(PunchItem).where(PunchItem.tenant_id == tenant_id, PunchItem.vendor_id.in_(ids))
         )
     )
 
@@ -281,8 +278,12 @@ async def scorecard(
                 f"{closed} of {len(pmine)} punch items cleared"
                 + (f", {overdue} overdue" if overdue else "")
                 + (f", {walkthrough} found by the buyer" if walkthrough else ""),
-                {"items": len(pmine), "closed": closed, "overdue": overdue,
-                 "from_walkthrough": walkthrough},
+                {
+                    "items": len(pmine),
+                    "closed": closed,
+                    "overdue": overdue,
+                    "from_walkthrough": walkthrough,
+                },
             )
         else:
             dims["quality"] = Dimension(None, 0, "no punch items raised against them")
@@ -292,9 +293,11 @@ async def scorecard(
         cmine = [c for c in callbacks if c.vendor_id == v.id]
         if homes or cmine:
             open_late = sum(
-                1 for c in cmine
+                1
+                for c in cmine
                 if c.status is not ServiceOrderStatus.COMPLETE
-                and c.scheduled_date and c.scheduled_date < today
+                and c.scheduled_date
+                and c.scheduled_date < today
             )
             per_home = len(cmine) / homes if homes else float(len(cmine))
             # Half a call-back per home is ordinary; each whole one costs forty points.
@@ -304,8 +307,12 @@ async def scorecard(
                 f"{len(cmine)} call-back{'s' if len(cmine) != 1 else ''} on "
                 f"{homes} home{'s' if homes != 1 else ''} handed over"
                 + (f", {open_late} late to fix" if open_late else ""),
-                {"homes": homes, "callbacks": len(cmine), "per_home": round(per_home, 2),
-                 "late": open_late},
+                {
+                    "homes": homes,
+                    "callbacks": len(cmine),
+                    "per_home": round(per_home, 2),
+                    "late": open_late,
+                },
             )
         else:
             dims["warranty"] = Dimension(None, 0, "no homes handed over yet")
@@ -315,9 +322,7 @@ async def scorecard(
         imine = [i for i in incidents if i.vendor_id == v.id]
         sample = len(omine) + len(imine)
         if sample:
-            open_overdue = sum(
-                1 for o in omine if o.status in OPEN_OBSERVATIONS and o.is_overdue
-            )
+            open_overdue = sum(1 for o in omine if o.status in OPEN_OBSERVATIONS and o.is_overdue)
             critical = sum(
                 1 for o in omine if o.severity.value == "critical" and o.status in OPEN_OBSERVATIONS
             )
@@ -332,9 +337,15 @@ async def scorecard(
             if reportable:
                 bits.append(f"{reportable} reportable incident{'s' if reportable != 1 else ''}")
             dims["safety"] = Dimension(
-                _clamp(score), sample, ", ".join(bits) or "clean",
-                {"observations": len(omine), "overdue": open_overdue,
-                 "incidents": len(imine), "reportable": reportable},
+                _clamp(score),
+                sample,
+                ", ".join(bits) or "clean",
+                {
+                    "observations": len(omine),
+                    "overdue": open_overdue,
+                    "incidents": len(imine),
+                    "reportable": reportable,
+                },
             )
         else:
             dims["safety"] = Dimension(None, 0, "nothing on record")
@@ -351,10 +362,13 @@ async def scorecard(
                 _clamp(100 - max(avg_days - 7, 0) * 8 - overdue * 10),
                 len(rmine),
                 f"{avg_days:.0f} days average on {len(rmine)} RFI"
-                f"{'s' if len(rmine) != 1 else ''}"
-                + (f", {overdue} overdue" if overdue else ""),
-                {"rfis": len(rmine), "avg_days_open": round(avg_days, 1),
-                 "still_open": still_open, "overdue": overdue},
+                f"{'s' if len(rmine) != 1 else ''}" + (f", {overdue} overdue" if overdue else ""),
+                {
+                    "rfis": len(rmine),
+                    "avg_days_open": round(avg_days, 1),
+                    "still_open": still_open,
+                    "overdue": overdue,
+                },
             )
         else:
             dims["responsiveness"] = Dimension(None, 0, "no RFIs assigned to them")
@@ -363,7 +377,9 @@ async def scorecard(
         pq = prequals.get(v.id)
         if pq is None:
             dims["compliance"] = Dimension(
-                None, 0, "no prequalification record",
+                None,
+                0,
+                "no prequalification record",
                 {"status": None, "compliant": None},
             )
         else:
@@ -381,12 +397,19 @@ async def scorecard(
                 score = 100 - expiring * 20
                 detail = "current" + (
                     f", {expiring} document{'s' if expiring != 1 else ''} lapsing soon"
-                    if expiring else ""
+                    if expiring
+                    else ""
                 )
             dims["compliance"] = Dimension(
-                _clamp(score), 1, detail,
-                {"status": pq.status.value, "compliant": pq.is_compliant,
-                 "expiring": expiring, "expired": expired},
+                _clamp(score),
+                1,
+                detail,
+                {
+                    "status": pq.status.value,
+                    "compliant": pq.is_compliant,
+                    "expiring": expiring,
+                    "expired": expired,
+                },
             )
 
         # ---- billing: do they invoice what the PO said
@@ -428,25 +451,27 @@ async def scorecard(
             overall = None
 
         evidence = sum(d.sample for d in dims.values())
-        out.append({
-            "vendor_id": v.id,
-            "vendor_name": v.name,
-            "overall": overall,
-            "tier": tier(overall),
-            # True when there is too little history to lean on the number.
-            "provisional": overall is not None and evidence < MIN_SAMPLE * 2,
-            "evidence": evidence,
-            "dimensions": {
-                k: {
-                    "score": d.score,
-                    "sample": d.sample,
-                    "detail": d.detail,
-                    "provisional": d.provisional,
-                    "facts": d.facts,
-                }
-                for k, d in dims.items()
-            },
-        })
+        out.append(
+            {
+                "vendor_id": v.id,
+                "vendor_name": v.name,
+                "overall": overall,
+                "tier": tier(overall),
+                # True when there is too little history to lean on the number.
+                "provisional": overall is not None and evidence < MIN_SAMPLE * 2,
+                "evidence": evidence,
+                "dimensions": {
+                    k: {
+                        "score": d.score,
+                        "sample": d.sample,
+                        "detail": d.detail,
+                        "provisional": d.provisional,
+                        "facts": d.facts,
+                    }
+                    for k, d in dims.items()
+                },
+            }
+        )
 
     # Best first, but anything unscored sinks to the bottom rather than topping
     # the list on a null.

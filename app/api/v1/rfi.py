@@ -212,8 +212,11 @@ async def raise_rfi(payload: RFICreate, db: DbSession, user: RequireStaff):
     await db.flush()
     db.add(
         rfi_service.log(
-            user.tenant_id, obj.id, RFIActivityKind.RAISED,
-            f"Raised, ball with {ball.value}.", user.id,
+            user.tenant_id,
+            obj.id,
+            RFIActivityKind.RAISED,
+            f"Raised, ball with {ball.value}.",
+            user.id,
         )
     )
     await db.commit()
@@ -239,8 +242,11 @@ async def update_rfi(rfi_id: uuid.UUID, payload: RFIUpdate, db: DbSession, user:
     if court_changed:
         db.add(
             rfi_service.log(
-                user.tenant_id, obj.id, RFIActivityKind.REASSIGNED,
-                f"Ball moved to {obj.ball_in_court.value}.", user.id,
+                user.tenant_id,
+                obj.id,
+                RFIActivityKind.REASSIGNED,
+                f"Ball moved to {obj.ball_in_court.value}.",
+                user.id,
             )
         )
     else:
@@ -250,9 +256,7 @@ async def update_rfi(rfi_id: uuid.UUID, payload: RFIUpdate, db: DbSession, user:
 
 
 @router.post("/{rfi_id}/reassign", response_model=RFIRead)
-async def reassign_rfi(
-    rfi_id: uuid.UUID, payload: RFIReassign, db: DbSession, user: RequireStaff
-):
+async def reassign_rfi(rfi_id: uuid.UUID, payload: RFIReassign, db: DbSession, user: RequireStaff):
     """Move the ball to another court. The reason, if given, joins the log."""
     obj = await _load(db, user.tenant_id, rfi_id)
     if obj.status in RFI_CLOSED_STATUSES:
@@ -284,9 +288,7 @@ def _apply_official(obj: RFIModel, resp: RFIResponse, user_id: uuid.UUID) -> Non
     obj.ball_in_court = BallInCourt.TRADE if obj.assigned_vendor_id else BallInCourt.BUILDER
 
 
-@router.post(
-    "/{rfi_id}/responses", response_model=RFIRead, status_code=status.HTTP_201_CREATED
-)
+@router.post("/{rfi_id}/responses", response_model=RFIRead, status_code=status.HTTP_201_CREATED)
 async def add_response(
     rfi_id: uuid.UUID, payload: RFIResponseCreate, db: DbSession, user: RequireDesignTeam
 ):
@@ -318,15 +320,21 @@ async def add_response(
         _apply_official(obj, resp, user.id)
         db.add(
             rfi_service.log(
-                user.tenant_id, obj.id, RFIActivityKind.ANSWERED,
-                f"Official answer from {payload.court.value}.", user.id,
+                user.tenant_id,
+                obj.id,
+                RFIActivityKind.ANSWERED,
+                f"Official answer from {payload.court.value}.",
+                user.id,
             )
         )
     else:
         db.add(
             rfi_service.log(
-                user.tenant_id, obj.id, RFIActivityKind.RESPONDED,
-                f"Response from {payload.court.value}.", user.id,
+                user.tenant_id,
+                obj.id,
+                RFIActivityKind.RESPONDED,
+                f"Response from {payload.court.value}.",
+                user.id,
             )
         )
 
@@ -501,8 +509,11 @@ async def raise_change_order_from_rfi(
 
     db.add(
         rfi_service.log(
-            user.tenant_id, rfi.id, RFIActivityKind.CHANGE_ORDER,
-            f"{co.co_number} raised from the answer.", user.id,
+            user.tenant_id,
+            rfi.id,
+            RFIActivityKind.CHANGE_ORDER,
+            f"{co.co_number} raised from the answer.",
+            user.id,
         )
     )
     await db.commit()

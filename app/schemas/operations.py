@@ -48,6 +48,9 @@ class ChangeOrderCreate(BaseModel):
     responsible_party: ResponsibleParty = ResponsibleParty.BUYER
     price_delta: Money = Decimal("0")
     schedule_days: int = 0
+    approval_deadline: date | None = None
+    client_notes: str | None = Field(default=None, max_length=2000)
+    internal_notes: str | None = Field(default=None, max_length=2000)
     cost_lines: list[ChangeOrderLineCreate] = []
 
 
@@ -63,6 +66,10 @@ class ChangeOrderRead(ORMModel):
     cost_delta: Money
     margin_impact: Money
     schedule_days: int
+    approval_deadline: date | None
+    approval_overdue: bool
+    client_notes: str | None
+    internal_notes: str | None
     approved_date: date | None
     cost_lines: list[ChangeOrderLineRead]
 
@@ -196,18 +203,18 @@ class InvoiceDispute(BaseModel):
 
 
 class InvoiceSummary(BaseModel):
-    actual_cost: Money             # approved + paid
+    actual_cost: Money  # approved + paid
     awaiting_approval: int
     awaiting_value: Money
     disputed: int
     approved_unpaid: int
-    approved_unpaid_value: Money   # net payable still to go out
+    approved_unpaid_value: Money  # net payable still to go out
     overdue_to_pay: int
     overdue_value: Money
-    waivers_missing: int           # approved, cannot be paid until the waiver is on file
+    waivers_missing: int  # approved, cannot be paid until the waiver is on file
     retention_held: Money
     cis_withheld_this_month: Money  # deducted on payments made this month, owed to HMRC
-    cis_unverified: int            # labour billed by a trade with no CIS status on record
+    cis_unverified: int  # labour billed by a trade with no CIS status on record
     total: int
     by_status: dict[str, int]
 

@@ -42,9 +42,7 @@ def _nps(promoters: int, detractors: int, n: int) -> int | None:
 @router.get("/summary", response_model=SurveySummary)
 async def summary(db: DbSession, user: RequireStaff):
     """Everything the dashboard needs, from one pass over the tenant's surveys."""
-    rows = list(
-        await db.scalars(select(Survey).where(Survey.tenant_id == user.tenant_id))
-    )
+    rows = list(await db.scalars(select(Survey).where(Survey.tenant_id == user.tenant_id)))
 
     sent = len(rows)
     responded = [r for r in rows if r.responded_date is not None]
@@ -147,9 +145,7 @@ async def list_surveys(
     elif band == "detractor":
         stmt = stmt.where(Survey.would_recommend.is_not(None), Survey.would_recommend < 7)
     if needs_follow_up:
-        stmt = stmt.where(
-            Survey.follow_up_required.is_(True), Survey.follow_up_done.is_(False)
-        )
+        stmt = stmt.where(Survey.follow_up_required.is_(True), Survey.follow_up_done.is_(False))
 
     rows = await db.scalars(stmt.order_by(Survey.created_at.desc()))
     return list(rows)

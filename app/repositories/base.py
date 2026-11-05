@@ -132,9 +132,7 @@ class TenantRepository[ModelT: Base]:
         stmt = self._searched(stmt, params.search)
 
         # Count over the same conditions, without the eager loads or ordering.
-        total = await self.db.scalar(
-            select(func.count()).select_from(stmt.subquery())
-        ) or 0
+        total = await self.db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
         if order_by is not None:
             stmt = stmt.order_by(order_by)
@@ -160,8 +158,10 @@ class TenantRepository[ModelT: Base]:
         return await self.db.scalar(self._base(*loads).where(self.model.id == obj_id))
 
     async def count(self, **filters: Any) -> int:
-        stmt = select(func.count()).select_from(self.model).where(
-            self.model.tenant_id == self.tenant_id
+        stmt = (
+            select(func.count())
+            .select_from(self.model)
+            .where(self.model.tenant_id == self.tenant_id)
         )
         for field, value in filters.items():
             if value is not None:

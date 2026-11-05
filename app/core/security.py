@@ -45,9 +45,7 @@ def create_access_token(subject: str, tenant_id: str, role: str) -> str:
 
 
 def create_refresh_token(subject: str) -> str:
-    return _create_token(
-        subject, "refresh", timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    )
+    return _create_token(subject, "refresh", timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
 
 
 def decode_token(token: str) -> dict[str, Any]:

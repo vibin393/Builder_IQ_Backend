@@ -26,9 +26,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 class ArchivableMixin:
     """Retire a record without destroying what references it."""
 
-    is_archived: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False, index=True
-    )
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     archived_by_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

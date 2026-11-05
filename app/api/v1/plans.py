@@ -104,7 +104,8 @@ async def _stats_for(db, tenant_id: uuid.UUID, plans: list[Plan]) -> dict[uuid.U
     jobs = list(
         await db.scalars(
             select(Job).where(
-                Job.tenant_id == tenant_id, Job.plan_id.in_(ids),
+                Job.tenant_id == tenant_id,
+                Job.plan_id.in_(ids),
                 Job.status != JobStatus.CANCELLED,
             )
         )
@@ -186,9 +187,9 @@ async def plans_summary(db: DbSession, user: RequireStaff):
     margins = [stats[p.id].margin_pct for p in active if stats[p.id].cost_lines]
     since = datetime.now(UTC) - timedelta(days=90)
     changes = await db.scalar(
-        select(func.count()).select_from(PlanPriceChange).where(
-            PlanPriceChange.tenant_id == user.tenant_id, PlanPriceChange.created_at >= since
-        )
+        select(func.count())
+        .select_from(PlanPriceChange)
+        .where(PlanPriceChange.tenant_id == user.tenant_id, PlanPriceChange.created_at >= since)
     )
     return PlanPortfolio(
         active=len(active),
@@ -199,7 +200,8 @@ async def plans_summary(db: DbSession, user: RequireStaff):
             else None
         ),
         low_margin=sum(
-            1 for p in active
+            1
+            for p in active
             if stats[p.id].cost_lines
             and stats[p.id].margin_pct is not None
             and stats[p.id].margin_pct < MARGIN_FLOOR_PCT
@@ -251,8 +253,12 @@ async def update_plan(plan_id: uuid.UUID, payload: PlanUpdate, db: DbSession, ad
     if new_price is not None and new_price != plan.base_price:
         db.add(
             PlanPriceChange(
-                tenant_id=admin.tenant_id, plan_id=plan.id, old_price=plan.base_price,
-                new_price=new_price, changed_by_id=admin.id, reason=reason,
+                tenant_id=admin.tenant_id,
+                plan_id=plan.id,
+                old_price=plan.base_price,
+                new_price=new_price,
+                changed_by_id=admin.id,
+                reason=reason,
             )
         )
     for key, value in data.items():
@@ -298,12 +304,24 @@ async def copy_plan(plan_id: uuid.UUID, payload: PlanCopy, db: DbSession, admin:
     code = payload.code.strip().upper()
     await _require_unique_code(db, admin.tenant_id, code)
     fields = (
-        "square_feet", "floor_area_sqm", "bedrooms", "bathrooms", "en_suites", "has_cloakroom",
-        "house_type", "storeys", "garage", "parking_spaces", "epc_target", "description",
+        "square_feet",
+        "floor_area_sqm",
+        "bedrooms",
+        "bathrooms",
+        "en_suites",
+        "has_cloakroom",
+        "house_type",
+        "storeys",
+        "garage",
+        "parking_spaces",
+        "epc_target",
+        "description",
         "base_price",
     )
     new = Plan(
-        tenant_id=admin.tenant_id, code=code, name=payload.name.strip(),
+        tenant_id=admin.tenant_id,
+        code=code,
+        name=payload.name.strip(),
         **{f: getattr(src, f) for f in fields},
     )
     db.add(new)
@@ -311,16 +329,24 @@ async def copy_plan(plan_id: uuid.UUID, payload: PlanCopy, db: DbSession, admin:
     for ln in await db.scalars(select(PlanCostLine).where(PlanCostLine.plan_id == src.id)):
         db.add(
             PlanCostLine(
-                tenant_id=admin.tenant_id, plan_id=new.id, cost_code_id=ln.cost_code_id,
-                vendor_id=ln.vendor_id, amount=ln.amount, labour_hours=ln.labour_hours,
+                tenant_id=admin.tenant_id,
+                plan_id=new.id,
+                cost_code_id=ln.cost_code_id,
+                vendor_id=ln.vendor_id,
+                amount=ln.amount,
+                labour_hours=ln.labour_hours,
                 description=ln.description,
             )
         )
     for e in await db.scalars(select(PlanElevation).where(PlanElevation.plan_id == src.id)):
         db.add(
             PlanElevation(
-                tenant_id=admin.tenant_id, plan_id=new.id, code=e.code, name=e.name,
-                price_adjustment=e.price_adjustment, description=e.description,
+                tenant_id=admin.tenant_id,
+                plan_id=new.id,
+                code=e.code,
+                name=e.name,
+                price_adjustment=e.price_adjustment,
+                description=e.description,
                 is_active=e.is_active,
             )
         )
@@ -357,7 +383,8 @@ async def pricing_guide(
     if community_id is not None:
         cp = await db.scalar(
             select(CommunityPlan).where(
-                CommunityPlan.community_id == community_id, CommunityPlan.plan_id == plan.id,
+                CommunityPlan.community_id == community_id,
+                CommunityPlan.plan_id == plan.id,
                 CommunityPlan.tenant_id == user.tenant_id,
             )
         )
@@ -383,9 +410,14 @@ async def pricing_guide(
 
     base = house + adjustment
     return PricingGuide(
-        plan_price=plan.base_price, community_price=community_price, house_price=house,
-        elevation_code=code, elevation_adjustment=adjustment, plot_premium=premium,
-        base_price=base, total=base + premium,
+        plan_price=plan.base_price,
+        community_price=community_price,
+        house_price=house,
+        elevation_code=code,
+        elevation_adjustment=adjustment,
+        plot_premium=premium,
+        base_price=base,
+        total=base + premium,
     )
 
 
@@ -426,7 +458,8 @@ async def list_plan_cost_lines(plan_id: uuid.UUID, db: DbSession, user: RequireS
 
 
 @router.post(
-    "/plans/{plan_id}/cost-lines", response_model=PlanCostLineRead,
+    "/plans/{plan_id}/cost-lines",
+    response_model=PlanCostLineRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_plan_cost_line(
@@ -530,7 +563,8 @@ async def _require_unique_elevation(db, plan_id, code: str, except_id=None) -> N
 
 
 @router.post(
-    "/plans/{plan_id}/elevations", response_model=ElevationRead,
+    "/plans/{plan_id}/elevations",
+    response_model=ElevationRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_elevation(
@@ -540,8 +574,12 @@ async def create_elevation(
     code = payload.code.strip().upper()
     await _require_unique_elevation(db, plan_id, code)
     e = PlanElevation(
-        tenant_id=admin.tenant_id, plan_id=plan_id, code=code, name=payload.name.strip(),
-        price_adjustment=payload.price_adjustment, description=payload.description,
+        tenant_id=admin.tenant_id,
+        plan_id=plan_id,
+        code=code,
+        name=payload.name.strip(),
+        price_adjustment=payload.price_adjustment,
+        description=payload.description,
     )
     db.add(e)
     await db.commit()

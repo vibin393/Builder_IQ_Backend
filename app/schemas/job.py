@@ -21,6 +21,7 @@ class ORMModel(BaseModel):
 
 # --- Jobs ---------------------------------------------------------------------
 
+
 class JobCreate(BaseModel):
     community_id: uuid.UUID
     lot_id: uuid.UUID
@@ -176,6 +177,7 @@ class CycleTimeReport(BaseModel):
 
 # --- Buyers and contracts -----------------------------------------------------
 
+
 class BuyerCreate(BaseModel):
     first_name: str = Field(min_length=1, max_length=120)
     last_name: str = Field(min_length=1, max_length=120)
@@ -229,6 +231,7 @@ class ContractRead(ORMModel):
 
 # --- Selections ---------------------------------------------------------------
 
+
 class SelectionCreate(BaseModel):
     option_id: uuid.UUID
     quantity: int = Field(default=1, ge=1)
@@ -268,6 +271,7 @@ class SelectionCascade(BaseModel):
 
 # --- Budgets ------------------------------------------------------------------
 
+
 class BudgetLineRead(ORMModel):
     id: uuid.UUID
     cost_code_id: uuid.UUID
@@ -288,6 +292,7 @@ class BudgetRead(ORMModel):
 
 
 # --- Purchase orders ----------------------------------------------------------
+
 
 class PurchaseOrderLineCreate(BaseModel):
     cost_code_id: uuid.UUID
@@ -349,20 +354,21 @@ class PurchaseOrderRead(ORMModel):
 
 
 class PurchaseOrderSummary(BaseModel):
-    committed: Money            # issued, acknowledged or complete
+    committed: Money  # issued, acknowledged or complete
     draft_value: Money
     drafts: int
-    open: int                   # issued or acknowledged — work still to be done
+    open: int  # issued or acknowledged — work still to be done
     awaiting_acknowledgement: int
-    overdue: int                # past required-by and still open
-    billed_to_date: Money       # approved invoices against committed POs
+    overdue: int  # past required-by and still open
+    billed_to_date: Money  # approved invoices against committed POs
     remaining_to_bill: Money
-    overrides: int              # issued past a gate, deliberately
+    overrides: int  # issued past a gate, deliberately
     total: int
     by_status: dict[str, int]
 
 
 # --- Job costing --------------------------------------------------------------
+
 
 class JobCostLine(BaseModel):
     cost_code_id: uuid.UUID

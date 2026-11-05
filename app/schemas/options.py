@@ -54,12 +54,12 @@ class OptionStats(BaseModel):
     margin: Money
     margin_pct: Decimal | None
     cost_lines: int
-    confirmed: int                 # confirmed selections, units summed
-    pending: int                   # chosen, not yet confirmed
-    revenue: Money                 # confirmed, at the price each was sold at
+    confirmed: int  # confirmed selections, units summed
+    pending: int  # chosen, not yet confirmed
+    revenue: Money  # confirmed, at the price each was sold at
     #: Confirmed on this share of sold homes it could have gone on.
     attach_rate_pct: Decimal | None
-    plans: int                     # 0: offered on every plan
+    plans: int  # 0: offered on every plan
 
 
 class OptionRead(ORMModel):

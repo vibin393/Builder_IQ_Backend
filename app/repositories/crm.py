@@ -70,9 +70,7 @@ class LeadRepository(TenantRepository[Lead]):
     search_fields = ("first_name", "last_name", "email", "phone", "mobile", "campaign", "city")
 
     async def all_ordered(self, *, include_archived: bool = False) -> list[Lead]:
-        return await self.list(
-            order_by=Lead.created_at.desc(), include_archived=include_archived
-        )
+        return await self.list(order_by=Lead.created_at.desc(), include_archived=include_archived)
 
     async def page(self, params, **filters):
         """Newest first. A lead list is read from the top: the one that came in
@@ -85,9 +83,7 @@ class LeadRepository(TenantRepository[Lead]):
         Applied as an extra WHERE rather than a status filter, so it composes with
         a caller that also wants, say, only hot leads.
         """
-        rows, total = await self._page_with(
-            params, Lead.status.in_(OPEN_STATUSES), **filters
-        )
+        rows, total = await self._page_with(params, Lead.status.in_(OPEN_STATUSES), **filters)
         return rows, total
 
     async def page_overdue(self, params, **filters):
@@ -206,9 +202,10 @@ class LeadRepository(TenantRepository[Lead]):
         base = [Lead.tenant_id == self.tenant_id, Lead.is_archived.is_(False)]
 
         async def n(*extra) -> int:
-            return await self.db.scalar(
-                select(func.count()).select_from(Lead).where(*base, *extra)
-            ) or 0
+            return (
+                await self.db.scalar(select(func.count()).select_from(Lead).where(*base, *extra))
+                or 0
+            )
 
         return {
             "open": await n(open_clause),

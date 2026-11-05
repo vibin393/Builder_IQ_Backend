@@ -66,8 +66,10 @@ class DesignAppointment(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "design_appointments"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     buyer_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("buyers.id", ondelete="SET NULL")
@@ -135,8 +137,10 @@ class SignatureRequest(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "signature_requests"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     document_kind: Mapped[DocumentKind] = mapped_column(
         Enum(DocumentKind, name="document_kind", values_callable=lambda e: [m.value for m in e]),
@@ -193,9 +197,7 @@ class SignatureRequest(UUIDMixin, TenantMixin, TimestampMixin, Base):
     def is_expired(self) -> bool:
         """Past its date and still unsigned. Derived rather than stored, so it
         becomes true on the day rather than when a job happens to run."""
-        return bool(
-            self.expires_on and self.is_outstanding and self.expires_on < date.today()
-        )
+        return bool(self.expires_on and self.is_outstanding and self.expires_on < date.today())
 
     def __repr__(self) -> str:
         return f"<SignatureRequest {self.document_name} {self.status}>"

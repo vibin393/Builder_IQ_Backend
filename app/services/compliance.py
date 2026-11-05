@@ -91,9 +91,7 @@ async def check_vendor(
         )
 
     if prequal.review_due and prequal.review_due < date.today():
-        return ComplianceResult(
-            ok=False, reason=f"annual review was due {prequal.review_due}"
-        )
+        return ComplianceResult(ok=False, reason=f"annual review was due {prequal.review_due}")
 
     expiring = [
         f"{d.document_type.value.replace('_', ' ')} (expires {d.expires_on})"
@@ -154,9 +152,7 @@ async def refresh_expired_status(db: AsyncSession, tenant_id: uuid.UUID) -> int:
             .options(selectinload(Prequalification.documents))
             .where(
                 Prequalification.tenant_id == tenant_id,
-                Prequalification.status.in_(
-                    (PrequalStatus.APPROVED, PrequalStatus.CONDITIONAL)
-                ),
+                Prequalification.status.in_((PrequalStatus.APPROVED, PrequalStatus.CONDITIONAL)),
             )
         )
     )
@@ -231,19 +227,23 @@ async def cover_gaps_on_schedule(
         for doc in prequal.documents:
             if doc.expires_on is None or doc.expires_on >= task.scheduled_finish:
                 continue
-            gaps.append({
-                "task_id": task.id,
-                "task_name": task.name,
-                "job_id": task.job_id,
-                "scheduled_start": task.scheduled_start,
-                "scheduled_finish": task.scheduled_finish,
-                "vendor_id": task.vendor_id,
-                "vendor_name": vendors[task.vendor_id].name if task.vendor_id in vendors else "?",
-                "document_type": doc.document_type.value,
-                "expires_on": doc.expires_on,
-                "days_uncovered": (task.scheduled_finish - doc.expires_on).days,
-                "already_lapsed": doc.is_expired,
-            })
+            gaps.append(
+                {
+                    "task_id": task.id,
+                    "task_name": task.name,
+                    "job_id": task.job_id,
+                    "scheduled_start": task.scheduled_start,
+                    "scheduled_finish": task.scheduled_finish,
+                    "vendor_id": task.vendor_id,
+                    "vendor_name": vendors[task.vendor_id].name
+                    if task.vendor_id in vendors
+                    else "?",
+                    "document_type": doc.document_type.value,
+                    "expires_on": doc.expires_on,
+                    "days_uncovered": (task.scheduled_finish - doc.expires_on).days,
+                    "already_lapsed": doc.is_expired,
+                }
+            )
 
     # Worst first: already lapsed, then the longest stretch of uncovered work.
     gaps.sort(key=lambda g: (not g["already_lapsed"], -int(g["days_uncovered"])))

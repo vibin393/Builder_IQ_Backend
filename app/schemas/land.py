@@ -180,8 +180,8 @@ class LandSummary(BaseModel):
     forecast: Money
     planned_plots: int
     delivered_plots: int
-    consents_expiring: int          # within 180 days, not yet complete
+    consents_expiring: int  # within 180 days, not yet complete
     obligations_open: int
     obligations_overdue: int
     pre_commencement_open: int
-    contributions_due: Money        # open S106 / CIL / other sums
+    contributions_due: Money  # open S106 / CIL / other sums

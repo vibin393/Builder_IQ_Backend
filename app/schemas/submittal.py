@@ -138,13 +138,13 @@ class SubmittalRead(ORMModel):
 class SubmittalSummary(BaseModel):
     total: int
     draft: int
-    awaiting_review: int       # submitted + under_review — the builder owes a decision
+    awaiting_review: int  # submitted + under_review — the builder owes a decision
     being_revised: int
     approved: int
     rejected: int
-    overdue: int               # past the review due date
-    at_risk: int               # procurement runway running out
-    ball_with_trade: int       # open, waiting on the trade to (re)submit
+    overdue: int  # past the review due date
+    at_risk: int  # procurement runway running out
+    ball_with_trade: int  # open, waiting on the trade to (re)submit
     avg_review_days: float | None
     by_status: dict[str, int]
     by_type: dict[str, int]

@@ -77,9 +77,7 @@ def _filters(
     ] = None,
     community_id: Annotated[uuid.UUID | None, Query(description="One community.")] = None,
     plan_id: Annotated[uuid.UUID | None, Query(description="One house type.")] = None,
-    superintendent_id: Annotated[
-        uuid.UUID | None, Query(description="Whose site this is.")
-    ] = None,
+    superintendent_id: Annotated[uuid.UUID | None, Query(description="Whose site this is.")] = None,
 ) -> dict:
     """The filters every home list shares, declared once."""
     supplied = {
@@ -126,9 +124,7 @@ async def live_jobs(db: DbSession, user: RequireStaff, params: PageQuery, filter
 
 
 @router.get("/building", response_model=Page[JobRead])
-async def building_jobs(
-    db: DbSession, user: RequireStaff, params: PageQuery, filters: JobFilters
-):
+async def building_jobs(db: DbSession, user: RequireStaff, params: PageQuery, filters: JobFilters):
     """Homes physically on site, held ones included - a stopped build still
     occupies a plot, a superintendent and a budget."""
     items, total = await JobService(db, user.tenant_id).list_building(params, **filters)
@@ -315,9 +311,7 @@ async def enter_warranty(job_id: uuid.UUID, db: DbSession, user: RequireStaff):
 
 
 @router.post("/{job_id}/cancel", response_model=JobRead)
-async def cancel_job(
-    job_id: uuid.UUID, payload: CancelRequest, db: DbSession, admin: RequireAdmin
-):
+async def cancel_job(job_id: uuid.UUID, payload: CancelRequest, db: DbSession, admin: RequireAdmin):
     """Abandon the home and give the plot back.
 
     The plot returns to available and a new home can be started on it - which a
@@ -330,9 +324,7 @@ async def cancel_job(
 # --- Contract -----------------------------------------------------------------
 
 
-@router.post(
-    "/{job_id}/contract", response_model=ContractRead, status_code=status.HTTP_201_CREATED
-)
+@router.post("/{job_id}/contract", response_model=ContractRead, status_code=status.HTTP_201_CREATED)
 async def create_contract(
     job_id: uuid.UUID, payload: ContractCreate, db: DbSession, user: RequireSales
 ):
@@ -379,7 +371,7 @@ async def create_contract(
                 "Release it on the community first.",
             )
         lot.status = LotStatus.SOLD
-        lot.clear_hold()   # the reservation has become a sale
+        lot.clear_hold()  # the reservation has become a sale
 
     # Before the commit, not after. The service only flushes, so if the sale is
     # refused the whole request rolls back together - the first version committed
@@ -431,12 +423,8 @@ async def sign_contract(
 # --- Budget -------------------------------------------------------------------
 
 
-@router.post(
-    "/{job_id}/budget", response_model=BudgetRead, status_code=status.HTTP_201_CREATED
-)
-async def generate_budget(
-    job_id: uuid.UUID, db: DbSession, user: RequirePurchasing
-):
+@router.post("/{job_id}/budget", response_model=BudgetRead, status_code=status.HTTP_201_CREATED)
+async def generate_budget(job_id: uuid.UUID, db: DbSession, user: RequirePurchasing):
     """Generate the job budget from the plan's standard costs. Runs once per job."""
     job = await get_tenant_scoped(db, Job, user.tenant_id, job_id)
     budget = await budget_service.generate_budget(db, user.tenant_id, job)
@@ -489,9 +477,7 @@ async def _read_budget(db, tenant_id: uuid.UUID, budget_id: uuid.UUID) -> Budget
 async def list_selections(job_id: uuid.UUID, db: DbSession, user: RequireStaff):
     await get_tenant_scoped(db, Job, user.tenant_id, job_id)
     rows = await db.scalars(
-        select(Selection).where(
-            Selection.job_id == job_id, Selection.tenant_id == user.tenant_id
-        )
+        select(Selection).where(Selection.job_id == job_id, Selection.tenant_id == user.tenant_id)
     )
     return list(rows)
 

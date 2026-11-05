@@ -107,16 +107,16 @@ class ExpiringDocument(BaseModel):
 
 class ComplianceSummary(BaseModel):
     prequalified: int
-    cleared: int               # on file and the PO gate would pass today
+    cleared: int  # on file and the PO gate would pass today
     approved: int
     conditional: int
-    would_be_refused: int      # on file but the PO gate would refuse today
-    no_record: int             # active trades with no prequalification at all
+    would_be_refused: int  # on file but the PO gate would refuse today
+    no_record: int  # active trades with no prequalification at all
     review_overdue: int
-    missing_required: int      # prequals missing a required cover
-    expiring_soon: int         # documents lapsing within 30 days
+    missing_required: int  # prequals missing a required cover
+    expiring_soon: int  # documents lapsing within 30 days
     expired_documents: int
-    cover_gaps: int            # scheduled tasks running past a lapse
+    cover_gaps: int  # scheduled tasks running past a lapse
     by_status: dict[str, int]
 
 

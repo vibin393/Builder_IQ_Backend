@@ -25,6 +25,7 @@ class DocumentCategory(StrEnum):
     PERMIT = "permit"
     INSPECTION = "inspection"
     PHOTO = "photo"
+    VIDEO = "video"
     WARRANTY = "warranty"
     INSURANCE = "insurance"
     LIEN_WAIVER = "lien_waiver"
@@ -32,10 +33,10 @@ class DocumentCategory(StrEnum):
 
 
 class DocumentStatus(StrEnum):
-    DRAFT = "draft"            # registered but not yet the live version
-    ACTIVE = "active"          # the current, in-force document
+    DRAFT = "draft"  # registered but not yet the live version
+    ACTIVE = "active"  # the current, in-force document
     SUPERSEDED = "superseded"  # replaced by a newer revision, kept as the record
-    ARCHIVED = "archived"      # withdrawn from the register, not deleted
+    ARCHIVED = "archived"  # withdrawn from the register, not deleted
 
 
 #: Categories that cost money or stop work when they cannot be produced. These are the
@@ -114,6 +115,11 @@ class Document(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"), index=True
+    )
+    # Files attached to a lead before it becomes a job — estimates, proposals,
+    # contract drafts sent during the sales conversation.
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("leads.id", ondelete="CASCADE"), index=True
     )
     uploaded_by_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

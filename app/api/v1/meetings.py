@@ -70,9 +70,7 @@ async def summary(db: DbSession, user: RequireStaff, job_id: uuid.UUID | None = 
     """The board: how many meetings, how many still to hold, how many actions are open
     and how many have slipped, plus the correspondence still awaiting a reply."""
     tenant = user.tenant_id
-    m_stmt = (
-        select(Meeting).options(selectinload(Meeting.items)).where(Meeting.tenant_id == tenant)
-    )
+    m_stmt = select(Meeting).options(selectinload(Meeting.items)).where(Meeting.tenant_id == tenant)
     if job_id is not None:
         m_stmt = m_stmt.where(Meeting.job_id == job_id)
     meetings = list(await db.scalars(m_stmt))

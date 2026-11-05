@@ -31,10 +31,10 @@ if TYPE_CHECKING:
 
 class PurchaseOrderStatus(StrEnum):
     DRAFT = "draft"
-    ISSUED = "issued"        # sent to the vendor; counts as committed cost
+    ISSUED = "issued"  # sent to the vendor; counts as committed cost
     ACKNOWLEDGED = "acknowledged"
     COMPLETE = "complete"
-    VOID = "void"            # no longer committed
+    VOID = "void"  # no longer committed
 
 
 COMMITTED_STATUSES = (
@@ -50,12 +50,16 @@ class PurchaseOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     po_number: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[PurchaseOrderStatus] = mapped_column(
         Enum(
@@ -116,9 +120,7 @@ class PurchaseOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
         """Invoiced and approved — the part of the commitment that is now actual cost."""
         from app.models.invoice import ACTUAL_STATUSES
 
-        return sum(
-            (i.total for i in self.invoices if i.status in ACTUAL_STATUSES), Decimal("0")
-        )
+        return sum((i.total for i in self.invoices if i.status in ACTUAL_STATUSES), Decimal("0"))
 
     @property
     def remaining_to_bill(self) -> Decimal:
@@ -155,12 +157,16 @@ class PurchaseOrderLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "purchase_order_lines"
 
     purchase_order_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("purchase_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(String(300))

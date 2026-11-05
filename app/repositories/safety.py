@@ -66,12 +66,8 @@ class ObservationRepository(TenantRepository[Observation]):
                 Observation.due_on < today,
             )
             .label("overdue"),
-            func.count()
-            .filter(open_clause, Observation.severity == "critical")
-            .label("critical"),
-            func.count()
-            .filter(Observation.inspection_id.is_not(None))
-            .label("from_inspections"),
+            func.count().filter(open_clause, Observation.severity == "critical").label("critical"),
+            func.count().filter(Observation.inspection_id.is_not(None)).label("from_inspections"),
         ).where(Observation.tenant_id == self.tenant_id)
         if job_id is not None:
             stmt = stmt.where(Observation.job_id == job_id)
@@ -86,9 +82,7 @@ class ObservationRepository(TenantRepository[Observation]):
 
     async def for_inspection(self, inspection_id: uuid.UUID) -> list[Observation]:
         return list(
-            await self.db.scalars(
-                self._base().where(Observation.inspection_id == inspection_id)
-            )
+            await self.db.scalars(self._base().where(Observation.inspection_id == inspection_id))
         )
 
 
@@ -106,9 +100,7 @@ class IncidentRepository(TenantRepository[Incident]):
             func.count().filter(reportable).label("reportable"),
             func.count().filter(reportable, unreported).label("awaiting_report"),
             func.count().filter(Incident.lost_time).label("lost_time"),
-            func.count()
-            .filter(Incident.incident_type == "near_miss")
-            .label("near_misses"),
+            func.count().filter(Incident.incident_type == "near_miss").label("near_misses"),
             func.count().filter(Incident.closed_on.is_(None)).label("open"),
         ).where(Incident.tenant_id == self.tenant_id)
         if job_id is not None:
@@ -131,9 +123,7 @@ class IncidentRepository(TenantRepository[Incident]):
                 Incident.reported_to_hse_on.is_(None),
             )
         )
-        overdue = sum(
-            1 for i in pending if i.riddor_deadline and i.riddor_deadline < today
-        )
+        overdue = sum(1 for i in pending if i.riddor_deadline and i.riddor_deadline < today)
         return {
             "incidents": row.total or 0,
             "open_incidents": row.open or 0,
@@ -185,9 +175,7 @@ class ActionPlanRepository(TenantRepository[ActionPlan]):
     async def templates(self) -> list[ActionPlan]:
         return list(
             await self.db.scalars(
-                self._base()
-                .where(ActionPlan.is_template.is_(True))
-                .order_by(ActionPlan.name)
+                self._base().where(ActionPlan.is_template.is_(True)).order_by(ActionPlan.name)
             )
         )
 

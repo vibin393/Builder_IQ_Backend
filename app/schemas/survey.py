@@ -68,7 +68,7 @@ class SurveyRead(ORMModel):
 
 
 class TrendPoint(BaseModel):
-    label: str          # e.g. "2026-03"
+    label: str  # e.g. "2026-03"
     nps: int | None
     responses: int
 
@@ -86,14 +86,14 @@ class SurveySummary(BaseModel):
     pending: int
     overdue: int
     declined: int
-    response_rate: float          # 0-1
+    response_rate: float  # 0-1
     nps: int | None
     star_rating: int | None
-    pct_recommend: float | None   # 0-100
+    pct_recommend: float | None  # 0-100
     promoters: int
     passives: int
     detractors: int
-    detractors_open: int          # detractors still needing follow-up
+    detractors_open: int  # detractors still needing follow-up
     avg_overall: float | None
     ratings: dict[str, float | None]
     by_stage: list[StageBreakdown]

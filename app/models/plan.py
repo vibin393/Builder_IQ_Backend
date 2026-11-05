@@ -97,12 +97,16 @@ class PlanCostLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL")
@@ -124,8 +128,10 @@ class PlanElevation(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("plan_id", "code", name="uq_plan_elevations_code"),)
 
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     code: Mapped[str] = mapped_column(String(32), nullable=False)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -144,8 +150,10 @@ class PlanPriceChange(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "plan_price_changes"
 
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     old_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     new_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)

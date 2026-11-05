@@ -24,6 +24,7 @@ from decimal import Decimal
 from enum import StrEnum
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Date,
     Enum,
@@ -130,9 +131,7 @@ class Realtor(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, AuditedMi
     """
 
     __tablename__ = "realtors"
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "code", name="uq_realtors_tenant_code"),
-    )
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_realtors_tenant_code"),)
 
     code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -173,6 +172,10 @@ class Lead(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, AuditedMixin
     address: Mapped[str | None] = mapped_column(String(300))
     city: Mapped[str | None] = mapped_column(String(120))
     postcode: Mapped[str | None] = mapped_column(String(20))
+    #: Geocoded position, for the lead map. Populated from the address when geocoding
+    #: is available; a lead with no coordinates simply does not appear on the map.
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
 
     # -- how they found us --------------------------------------------------
     source: Mapped[LeadSource] = mapped_column(
@@ -207,6 +210,20 @@ class Lead(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, AuditedMixin
     bedrooms_needed: Mapped[int | None] = mapped_column(Integer)
     #: When they need to be in. A school-year deadline outranks price.
     desired_move_in: Mapped[date | None] = mapped_column(Date)
+    #: What kind of work this opportunity is — new build, remodel, addition, ADU.
+    #: Free text, because every builder's list differs.
+    project_type: Mapped[str | None] = mapped_column(String(120))
+    #: Free-form labels for filtering the pipeline, as BuilderTrend's opportunity tags.
+    tags: Mapped[list | None] = mapped_column(JSON)
+
+    # -- forecast -----------------------------------------------------------
+    #: Probability of winning, 0-100. The weight behind a pipeline forecast: a
+    #: $500k job at 20% is $100k of expected revenue, not $500k.
+    confidence: Mapped[int | None] = mapped_column(Integer)
+    #: When the sale is expected to close. Distinct from desired_move_in (the
+    #: buyer's deadline) and next_follow_up (the next touch): this is the date the
+    #: forecast and the sales calendar hang off.
+    projected_sales_date: Mapped[date | None] = mapped_column(Date, index=True)
 
     # -- can they actually buy ---------------------------------------------
     is_prequalified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -291,8 +308,10 @@ class LeadActivity(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "lead_activities"
 
     lead_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("leads.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("leads.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

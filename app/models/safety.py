@@ -31,7 +31,7 @@ class ObservationStatus(StrEnum):
     INITIATED = "initiated"
     READY_FOR_REVIEW = "ready_for_review"
     CLOSED = "closed"
-    NOT_ACCEPTED = "not_accepted"   # the fix was inspected and failed
+    NOT_ACCEPTED = "not_accepted"  # the fix was inspected and failed
 
 
 class Severity(StrEnum):
@@ -98,14 +98,17 @@ class ActionPlanStatus(StrEnum):
 
 # ======================================================= observations =====
 
+
 class Observation(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """Something seen on site that somebody now owes a fix for."""
 
     __tablename__ = "observations"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     description: Mapped[str | None] = mapped_column(String(2000))
@@ -187,6 +190,7 @@ class Observation(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 # ========================================================== incidents =====
 
+
 class Incident(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """An injury, illness, near miss or damage event.
 
@@ -197,8 +201,10 @@ class Incident(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "incidents"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     incident_type: Mapped[IncidentType] = mapped_column(
         Enum(IncidentType, name="incident_type", values_callable=lambda e: [m.value for m in e]),
@@ -281,6 +287,7 @@ class Incident(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 
 # ======================================================= action plans =====
+
 
 class ActionPlan(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """A named set of steps that must be signed off, in order.
@@ -371,8 +378,10 @@ class ActionPlanItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "action_plan_items"
 
     plan_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("action_plans.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("action_plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sequence: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -415,6 +424,7 @@ class ActionPlanItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 # ========================================================== timecards =====
 
+
 class Timecard(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """Labour hours against a job and a cost code.
 
@@ -426,8 +436,10 @@ class Timecard(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "timecards"
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="SET NULL"), index=True
@@ -476,7 +488,6 @@ class Timecard(UUIDMixin, TenantMixin, TimestampMixin, Base):
         """
         if self.hourly_rate is None:
             return None
-        return (
-            self.hours * self.hourly_rate
-            + self.overtime_hours * self.hourly_rate * Decimal("1.5")
+        return self.hours * self.hourly_rate + self.overtime_hours * self.hourly_rate * Decimal(
+            "1.5"
         )

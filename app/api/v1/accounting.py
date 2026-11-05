@@ -33,9 +33,12 @@ from app.api.deps import (
 from app.models.accounting import ExportBatch, ExportFormat, ExportKind, ExportStatus
 from app.models.contract import Buyer, Contract
 from app.models.cost_code import CostCode
+from app.models.estimate import ClientUpdate
 from app.models.invoice import ACTUAL_STATUSES, Invoice, InvoiceStatus
 from app.models.job import Job
+from app.models.owner_invoice import OwnerInvoice, OwnerInvoiceStatus
 from app.models.purchase_order import COMMITTED_STATUSES, PurchaseOrder
+from app.models.selection import Selection, SelectionApprovalStatus, SelectionChoice
 from app.models.user import UserRole
 from app.models.vendor import Vendor
 from app.models.warranty import WarrantyRequest
@@ -55,8 +58,11 @@ from app.schemas.accounting import (
     MappingRow,
     ReadyCount,
 )
+from app.schemas.homeowner import BuyerInvoice, BuyerUpdate
 from app.schemas.operations import WarrantyRequestCreate, WarrantyRequestRead
+from app.schemas.signoff import BuyerApprove, BuyerDecline, SelectionSignoffRead
 from app.services import accounting as acct
+from app.services.signoff import SignoffService
 
 router = APIRouter()
 
@@ -172,7 +178,7 @@ async def accounting_summary(db: DbSession, user: RequirePurchasing):
         ),
         ZERO,
     )
-    await db.commit()   # settings may have been created on first use
+    await db.commit()  # settings may have been created on first use
 
     return AccountingSummary(
         ready=ready,
@@ -245,16 +251,14 @@ async def create_batch(payload: BatchCreate, db: DbSession, user: RequireAccount
     cfg = await acct.settings_for(db, user.tenant_id)
     rows, waiting = await acct.candidates(db, user.tenant_id, payload.kind, through)
     if not rows:
-        extra = (
-            f" {waiting} are waiting for their invoice to be exported first." if waiting else ""
-        )
+        extra = f" {waiting} are waiting for their invoice to be exported first." if waiting else ""
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"No {_KIND_NOUN[payload.kind]} are ready to export.{extra}",
         )
     _, journal = acct.build(rows, payload.kind, cfg, await acct.lookups(db, user.tenant_id))
     debits, credits = acct.totals(journal)
-    if debits != credits:   # cannot happen by construction; refuse loudly if it ever does
+    if debits != credits:  # cannot happen by construction; refuse loudly if it ever does
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"The journal does not balance (Dr {debits} / Cr {credits}). Not exported.",
@@ -326,8 +330,7 @@ async def mark_posted(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
-                "Only an exported batch can be marked posted; "
-                f"this one is {batch.status.value}."
+                f"Only an exported batch can be marked posted; this one is {batch.status.value}."
             ),
         )
     batch.status = ExportStatus.POSTED
@@ -421,8 +424,12 @@ async def _mapping(db, tenant_id: uuid.UUID) -> list[MappingRead]:
     )
     return [
         MappingRead(
-            cost_code_id=c.id, code=c.code, name=c.name, division=c.division,
-            gl_account=c.gl_account, is_active=c.is_active,
+            cost_code_id=c.id,
+            code=c.code,
+            name=c.name,
+            division=c.division,
+            gl_account=c.gl_account,
+            is_active=c.is_active,
         )
         for c in codes
     ]
@@ -474,8 +481,7 @@ async def cis_return(
         )
     )
     vendors = {
-        v.id: v
-        for v in await db.scalars(select(Vendor).where(Vendor.tenant_id == user.tenant_id))
+        v.id: v for v in await db.scalars(select(Vendor).where(Vendor.tenant_id == user.tenant_id))
     }
     rows: dict[uuid.UUID, CISReturnRow] = {}
     for inv in paid:
@@ -491,9 +497,16 @@ async def cis_return(
             if not v.utr:
                 problems.append("No UTR on record")
             row = rows[v.id] = CISReturnRow(
-                vendor_id=v.id, supplier_code=v.code, supplier_name=v.name, utr=v.utr,
-                cis_status=v.cis_status.value if v.cis_status else None, payments=0,
-                gross_paid=ZERO, materials=ZERO, labour=ZERO, deducted=ZERO,
+                vendor_id=v.id,
+                supplier_code=v.code,
+                supplier_name=v.name,
+                utr=v.utr,
+                cis_status=v.cis_status.value if v.cis_status else None,
+                payments=0,
+                gross_paid=ZERO,
+                materials=ZERO,
+                labour=ZERO,
+                deducted=ZERO,
                 problems=problems,
             )
         gross = inv.total - inv.retention_withheld
@@ -530,9 +543,17 @@ async def vendor_master_csv(db: DbSession, user: RequirePurchasing):
     )
     for v in vendors:
         writer.writerow(
-            [v.code, v.name, v.vendor_type, v.contact_name or "", v.email or "",
-             v.phone or "", v.utr or "", v.cis_status.value if v.cis_status else "",
-             "yes" if v.is_active else "no"]
+            [
+                v.code,
+                v.name,
+                v.vendor_type,
+                v.contact_name or "",
+                v.email or "",
+                v.phone or "",
+                v.utr or "",
+                v.cis_status.value if v.cis_status else "",
+                "yes" if v.is_active else "no",
+            ]
         )
     return StreamingResponse(
         iter([buffer.getvalue()]),
@@ -580,9 +601,7 @@ async def homeowner_home(db: DbSession, user: CurrentUser):
     """The homeowner's own home: progress and warranty. No costs, ever."""
     buyer = await _buyer_for(db, user)
 
-    contracts = list(
-        await db.scalars(select(Contract).where(Contract.buyer_id == buyer.id))
-    )
+    contracts = list(await db.scalars(select(Contract).where(Contract.buyer_id == buyer.id)))
     homes = []
     for c in contracts:
         job = await db.get(Job, c.job_id)
@@ -629,9 +648,7 @@ async def homeowner_warranty(db: DbSession, user: CurrentUser):
 @home_router.post(
     "/warranty", response_model=WarrantyRequestRead, status_code=status.HTTP_201_CREATED
 )
-async def homeowner_submit_claim(
-    payload: WarrantyRequestCreate, db: DbSession, user: CurrentUser
-):
+async def homeowner_submit_claim(payload: WarrantyRequestCreate, db: DbSession, user: CurrentUser):
     """Submit a claim on a home this homeowner actually owns."""
     buyer = await _buyer_for(db, user)
 
@@ -639,9 +656,7 @@ async def homeowner_submit_claim(
         select(Contract).where(Contract.job_id == payload.job_id, Contract.buyer_id == buyer.id)
     )
     if contract is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="That is not your home."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="That is not your home.")
 
     count = await db.scalar(
         select(func.count())
@@ -667,6 +682,159 @@ async def homeowner_submit_claim(
         .options(selectinload(WarrantyRequest.service_orders))
         .where(WarrantyRequest.id == req.id)
     )
+
+
+async def _buyer_job_ids(db, buyer) -> set[uuid.UUID]:
+    """The jobs this buyer actually owns — the gate on everything below."""
+    rows = await db.scalars(select(Contract.job_id).where(Contract.buyer_id == buyer.id))
+    return set(rows)
+
+
+async def _owned_selection(db, user, job_ids, selection_id) -> Selection:
+    """Load a selection and confirm it belongs to one of the buyer's homes.
+
+    404, not 403, when it is someone else's: a buyer must not be able to probe
+    which selection ids exist on other people's jobs.
+    """
+    sel = await db.scalar(
+        select(Selection).where(Selection.tenant_id == user.tenant_id, Selection.id == selection_id)
+    )
+    if sel is None or sel.job_id not in job_ids:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="That is not your selection."
+        )
+    return sel
+
+
+@home_router.get("/selections", response_model=list[SelectionSignoffRead])
+async def homeowner_selections(db: DbSession, user: CurrentUser):
+    """Every selection released to this buyer — awaiting them, or already decided.
+
+    Not-yet-submitted selections are hidden: the builder has not released them.
+    """
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    if not job_ids:
+        return []
+    rows = list(
+        await db.scalars(
+            select(Selection)
+            .options(selectinload(Selection.option), selectinload(Selection.choices))
+            .where(
+                Selection.tenant_id == user.tenant_id,
+                Selection.job_id.in_(job_ids),
+                Selection.approval_status != SelectionApprovalStatus.NOT_SUBMITTED,
+            )
+            .order_by(Selection.approval_status, Selection.selected_date.desc())
+            .execution_options(populate_existing=True)
+        )
+    )
+    return [SelectionSignoffRead.of(s) for s in rows]
+
+
+@home_router.post("/selections/{selection_id}/approve", response_model=SelectionSignoffRead)
+async def homeowner_approve_selection(
+    selection_id: uuid.UUID, payload: BuyerApprove, db: DbSession, user: CurrentUser
+):
+    """The buyer approves a material with a typed signature — self-service."""
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    await _owned_selection(db, user, job_ids, selection_id)
+    svc = SignoffService(db, user.tenant_id)
+    sel = await svc.approve(selection_id, signature=payload.signature, comment=payload.comment)
+    sel.approved_by_buyer_id = buyer.id
+    await db.commit()
+    return SelectionSignoffRead.of(sel)
+
+
+@home_router.post("/selections/{selection_id}/decline", response_model=SelectionSignoffRead)
+async def homeowner_decline_selection(
+    selection_id: uuid.UUID, payload: BuyerDecline, db: DbSession, user: CurrentUser
+):
+    """The buyer declines a material, with a reason."""
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    await _owned_selection(db, user, job_ids, selection_id)
+    svc = SignoffService(db, user.tenant_id)
+    sel = await svc.decline(
+        selection_id, reason=payload.reason, signature=payload.signature, comment=payload.comment
+    )
+    return SelectionSignoffRead.of(sel)
+
+
+@home_router.post("/selections/choices/{choice_id}/select", response_model=SelectionSignoffRead)
+async def homeowner_pick_choice(choice_id: uuid.UUID, db: DbSession, user: CurrentUser):
+    """The buyer picks one priced choice on a selection that offers several."""
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    choice = await db.scalar(
+        select(SelectionChoice).where(
+            SelectionChoice.tenant_id == user.tenant_id, SelectionChoice.id == choice_id
+        )
+    )
+    if choice is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Choice not found.")
+    await _owned_selection(db, user, job_ids, choice.selection_id)
+    svc = SignoffService(db, user.tenant_id)
+    sel = await svc.select_choice(choice_id)
+    return SelectionSignoffRead.of(sel)
+
+
+@home_router.get("/invoices", response_model=list[BuyerInvoice])
+async def homeowner_invoices(db: DbSession, user: CurrentUser):
+    """The buyer's issued invoices — price, paid and balance only, never cost.
+
+    Opening the list marks any still-`sent` invoice as `viewed`, recording the
+    date the owner first saw it (BuilderTrend's "Viewed by Owner On").
+    """
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    if not job_ids:
+        return []
+    rows = list(
+        await db.scalars(
+            select(OwnerInvoice)
+            .options(selectinload(OwnerInvoice.lines), selectinload(OwnerInvoice.payments))
+            .where(
+                OwnerInvoice.tenant_id == user.tenant_id,
+                OwnerInvoice.job_id.in_(job_ids),
+                OwnerInvoice.status != OwnerInvoiceStatus.DRAFT,
+            )
+            .order_by(OwnerInvoice.issue_date.desc().nullslast(), OwnerInvoice.created_at.desc())
+            .execution_options(populate_existing=True)
+        )
+    )
+    today = date.today()
+    changed = False
+    for inv in rows:
+        if inv.status is OwnerInvoiceStatus.SENT:
+            inv.status = OwnerInvoiceStatus.VIEWED
+            inv.viewed_by_owner_on = today
+            changed = True
+    if changed:
+        await db.commit()
+    return [BuyerInvoice.of(inv) for inv in rows]
+
+
+@home_router.get("/updates", response_model=list[BuyerUpdate])
+async def homeowner_updates(db: DbSession, user: CurrentUser):
+    """Published client updates on the buyer's homes — the builder's broadcast feed."""
+    buyer = await _buyer_for(db, user)
+    job_ids = await _buyer_job_ids(db, buyer)
+    if not job_ids:
+        return []
+    rows = list(
+        await db.scalars(
+            select(ClientUpdate)
+            .where(
+                ClientUpdate.tenant_id == user.tenant_id,
+                ClientUpdate.job_id.in_(job_ids),
+                ClientUpdate.is_published.is_(True),
+            )
+            .order_by(ClientUpdate.posted_on.desc(), ClientUpdate.created_at.desc())
+        )
+    )
+    return [BuyerUpdate.of(u) for u in rows]
 
 
 # ==============================================================================

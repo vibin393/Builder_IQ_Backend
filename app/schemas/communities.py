@@ -65,14 +65,14 @@ class PlotCounts(BaseModel):
 
 class CommunityStats(BaseModel):
     plots: PlotCounts
-    live_homes: int                 # a job not cancelled and not yet handed over
-    spec_homes: int                 # being built with no buyer: stock to sell
+    live_homes: int  # a job not cancelled and not yet handed over
+    spec_homes: int  # being built with no buyer: stock to sell
     sales_90_days: int
     #: Sales per month over the last 90 days.
     absorption: Decimal
     #: Unsold plots (available + held) at that rate. None when nothing is selling.
     months_of_supply: Decimal | None
-    holds_expiring_soon: int        # within 7 days
+    holds_expiring_soon: int  # within 7 days
 
 
 class CommunityRead(ORMModel):
@@ -154,7 +154,7 @@ class CommunityPlanRead(BaseModel):
     base_price: Money | None
     effective_price: Money
     is_active: bool
-    homes: int                       # live homes of this plan on this development
+    homes: int  # live homes of this plan on this development
 
 
 # --- plots ----------------------------------------------------------------------------
@@ -187,7 +187,7 @@ class LotBulkCreate(BaseModel):
 
 class LotBulkResult(BaseModel):
     created: int
-    skipped: list[str]               # numbers that already existed
+    skipped: list[str]  # numbers that already existed
 
 
 class LotUpdate(BaseModel):
@@ -212,6 +212,8 @@ class LotRead(ORMModel):
     lot_number: str
     address: str | None
     postcode: str | None
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
     status: LotStatus
     premium: Money
     phase_id: uuid.UUID | None = None

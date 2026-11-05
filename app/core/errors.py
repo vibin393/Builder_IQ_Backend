@@ -56,18 +56,12 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Conflict)
     async def _conflict(_: Request, exc: Conflict) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message}
-        )
+        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": exc.message})
 
     @app.exception_handler(BusinessRuleViolation)
     async def _rule(_: Request, exc: BusinessRuleViolation) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT, content={"detail": exc.detail}
-        )
+        return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": exc.detail})
 
     @app.exception_handler(PermissionDenied)
     async def _denied(_: Request, exc: PermissionDenied) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN, content={"detail": exc.message}
-        )
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": exc.message})

@@ -56,9 +56,11 @@ def _breakdown(selection: Selection, option: Option) -> list[dict]:
     if selection.cost_breakdown is not None:
         return selection.cost_breakdown
     return [
-        {"cost_code_id": str(cl.cost_code_id),
-         "vendor_id": str(cl.vendor_id) if cl.vendor_id else None,
-         "amount": str(cl.amount)}
+        {
+            "cost_code_id": str(cl.cost_code_id),
+            "vendor_id": str(cl.vendor_id) if cl.vendor_id else None,
+            "amount": str(cl.amount),
+        }
         for cl in option.cost_lines
     ]
 
@@ -112,9 +114,11 @@ async def add_selection(
         cost_at_selection=option.total_cost,
         schedule_days_at_selection=option.schedule_days,
         cost_breakdown=[
-            {"cost_code_id": str(cl.cost_code_id),
-             "vendor_id": str(cl.vendor_id) if cl.vendor_id else None,
-             "amount": str(cl.amount)}
+            {
+                "cost_code_id": str(cl.cost_code_id),
+                "vendor_id": str(cl.vendor_id) if cl.vendor_id else None,
+                "amount": str(cl.amount),
+            }
             for cl in option.cost_lines
         ],
         selected_date=selected_date or date.today(),

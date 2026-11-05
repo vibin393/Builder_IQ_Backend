@@ -192,9 +192,7 @@ class MarketingService:
             raise Conflict(f"{campaign.name} was cancelled.")
         raise BusinessRuleViolation(
             f"{campaign.name} cannot go from {campaign.status.value} to {to.value}.",
-            "Next steps from here: "
-            + (", ".join(s.value for s in allowed) or "none")
-            + ".",
+            "Next steps from here: " + (", ".join(s.value for s in allowed) or "none") + ".",
         )
 
     async def schedule(self, campaign_id: uuid.UUID, when: date) -> Campaign:
@@ -223,8 +221,7 @@ class MarketingService:
         if campaign.channel is CampaignChannel.EMAIL and not (campaign.subject or "").strip():
             raise BusinessRuleViolation(
                 f"{campaign.name} has no subject line.",
-                "An email arriving with an empty subject is worse than one that "
-                "does not arrive.",
+                "An email arriving with an empty subject is worse than one that does not arrive.",
             )
 
         campaign.status = CampaignStatus.RUNNING
@@ -258,8 +255,7 @@ class MarketingService:
         if opened > sent:
             raise BusinessRuleViolation(
                 f"More opens ({opened}) than sends ({sent}).",
-                "Check the figures from the provider - as given, the open rate "
-                "would be over 100%.",
+                "Check the figures from the provider - as given, the open rate would be over 100%.",
             )
         if clicked > opened:
             raise BusinessRuleViolation(
@@ -421,21 +417,27 @@ class MarketingService:
         the lead record survives conversion: without it a campaign can only be
         judged on enquiries, and enquiries are not what pays for the marketing.
         """
-        leads = await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(Lead.tenant_id == self.tenant_id, Lead.campaign_id == campaign_id)
-        ) or 0
-
-        converted = await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(
-                Lead.tenant_id == self.tenant_id,
-                Lead.campaign_id == campaign_id,
-                Lead.status == LeadStatus.CONVERTED,
+        leads = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(Lead.tenant_id == self.tenant_id, Lead.campaign_id == campaign_id)
             )
-        ) or 0
+            or 0
+        )
+
+        converted = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(
+                    Lead.tenant_id == self.tenant_id,
+                    Lead.campaign_id == campaign_id,
+                    Lead.status == LeadStatus.CONVERTED,
+                )
+            )
+            or 0
+        )
 
         contracts = await self.db.execute(
             select(Contract)
@@ -464,37 +466,45 @@ class MarketingService:
                 Campaign.tenant_id == self.tenant_id
             )
         ) or Decimal("0")
-        attributed = await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(Lead.tenant_id == self.tenant_id, Lead.campaign_id.is_not(None))
-        ) or 0
-        converted = await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(
-                Lead.tenant_id == self.tenant_id,
-                Lead.campaign_id.is_not(None),
-                Lead.status == LeadStatus.CONVERTED,
+        attributed = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(Lead.tenant_id == self.tenant_id, Lead.campaign_id.is_not(None))
             )
-        ) or 0
+            or 0
+        )
+        converted = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(
+                    Lead.tenant_id == self.tenant_id,
+                    Lead.campaign_id.is_not(None),
+                    Lead.status == LeadStatus.CONVERTED,
+                )
+            )
+            or 0
+        )
         #: Leads carrying a tag that matches no campaign. Money spent somewhere
         #: nobody can name, which is worth surfacing rather than silently dropping.
-        unmatched = await self.db.scalar(
-            select(func.count())
-            .select_from(Lead)
-            .where(
-                Lead.tenant_id == self.tenant_id,
-                Lead.campaign.is_not(None),
-                Lead.campaign_id.is_(None),
+        unmatched = (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(Lead)
+                .where(
+                    Lead.tenant_id == self.tenant_id,
+                    Lead.campaign.is_not(None),
+                    Lead.campaign_id.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         return {
             "by_status": {s.value: counts.get(s.value, 0) for s in CampaignStatus},
             "active": sum(
-                counts.get(s.value, 0)
-                for s in (CampaignStatus.SCHEDULED, CampaignStatus.RUNNING)
+                counts.get(s.value, 0) for s in (CampaignStatus.SCHEDULED, CampaignStatus.RUNNING)
             ),
             "total_spend": spend,
             "leads_attributed": attributed,

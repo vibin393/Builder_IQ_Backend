@@ -23,24 +23,24 @@ from app.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 class PrequalStatus(StrEnum):
     NOT_STARTED = "not_started"
     INVITED = "invited"
-    SUBMITTED = "submitted"       # trade has returned their pack
+    SUBMITTED = "submitted"  # trade has returned their pack
     UNDER_REVIEW = "under_review"
-    APPROVED = "approved"         # cleared to bid and to hold purchase orders
-    CONDITIONAL = "conditional"   # approved with a cap or a caveat
+    APPROVED = "approved"  # cleared to bid and to hold purchase orders
+    CONDITIONAL = "conditional"  # approved with a cap or a caveat
     REJECTED = "rejected"
-    EXPIRED = "expired"           # was approved; a document has since lapsed
+    EXPIRED = "expired"  # was approved; a document has since lapsed
 
 
 class DocumentType(StrEnum):
     # UK trade paperwork — what a British homebuilder actually asks a subcontractor for.
-    PUBLIC_LIABILITY = "public_liability"          # third-party injury/damage cover
-    EMPLOYERS_LIABILITY = "employers_liability"    # legally required if they have staff
+    PUBLIC_LIABILITY = "public_liability"  # third-party injury/damage cover
+    EMPLOYERS_LIABILITY = "employers_liability"  # legally required if they have staff
     PROFESSIONAL_INDEMNITY = "professional_indemnity"
-    CIS_REGISTRATION = "cis_registration"          # Construction Industry Scheme
+    CIS_REGISTRATION = "cis_registration"  # Construction Industry Scheme
     VAT_REGISTRATION = "vat_registration"
-    TRADE_ACCREDITATION = "trade_accreditation"    # Gas Safe, NICEIC, FENSA, etc.
+    TRADE_ACCREDITATION = "trade_accreditation"  # Gas Safe, NICEIC, FENSA, etc.
     HEALTH_SAFETY_POLICY = "health_safety_policy"
-    DBS_CHECK = "dbs_check"                         # for work around occupied homes
+    DBS_CHECK = "dbs_check"  # for work around occupied homes
     # Legacy US-style values kept so records created before the UK rework still read.
     GENERAL_LIABILITY = "general_liability"
     WORKERS_COMP = "workers_comp"
@@ -68,8 +68,10 @@ class Prequalification(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("vendor_id", name="uq_prequal_vendor"),)
 
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[PrequalStatus] = mapped_column(
         Enum(PrequalStatus, name="prequal_status", values_callable=lambda e: [m.value for m in e]),
@@ -158,8 +160,10 @@ class ComplianceDocument(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "compliance_documents"
 
     prequalification_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("prequalifications.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("prequalifications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     document_type: Mapped[DocumentType] = mapped_column(
         Enum(
@@ -170,8 +174,8 @@ class ComplianceDocument(UUIDMixin, TenantMixin, TimestampMixin, Base):
         nullable=False,
         index=True,
     )
-    reference: Mapped[str | None] = mapped_column(String(120))   # policy or licence number
-    issuer: Mapped[str | None] = mapped_column(String(200))      # insurer or authority
+    reference: Mapped[str | None] = mapped_column(String(120))  # policy or licence number
+    issuer: Mapped[str | None] = mapped_column(String(200))  # insurer or authority
     coverage_amount: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     issued_on: Mapped[date | None] = mapped_column(Date)
     expires_on: Mapped[date | None] = mapped_column(Date, index=True)

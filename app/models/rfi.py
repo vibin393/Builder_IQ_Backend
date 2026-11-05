@@ -29,8 +29,8 @@ class RFIActivityKind(StrEnum):
 
     RAISED = "raised"
     RESPONDED = "responded"
-    ANSWERED = "answered"          # an official response was recorded
-    REASSIGNED = "reassigned"      # the ball moved to another court
+    ANSWERED = "answered"  # an official response was recorded
+    REASSIGNED = "reassigned"  # the ball moved to another court
     EDITED = "edited"
     REOPENED = "reopened"
     CLOSED = "closed"
@@ -48,8 +48,10 @@ class RFIResponse(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "rfi_responses"
 
     rfi_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("rfis.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("rfis.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     author_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
@@ -81,8 +83,10 @@ class RFIActivity(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "rfi_activity"
 
     rfi_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("rfis.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("rfis.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     author_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

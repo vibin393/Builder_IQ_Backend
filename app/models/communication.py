@@ -32,6 +32,7 @@ class BallInCourt(StrEnum):
     BUYER = "buyer"
     CLOSED = "closed"
 
+
 # Which user role actually answers when the ball sits in each court.
 #
 # Procore ships one combined "Architect/Engineer" template rather than two, and
@@ -42,8 +43,8 @@ COURT_ROLE = {
     BallInCourt.ENGINEER: "architect",
     BallInCourt.BUYER: "homeowner",
     BallInCourt.TRADE: "trade",
-    BallInCourt.BUILDER: None,   # any internal role
-    BallInCourt.CLOSED: None,    # nobody owes anything
+    BallInCourt.BUILDER: None,  # any internal role
+    BallInCourt.CLOSED: None,  # nobody owes anything
 }
 
 
@@ -62,14 +63,14 @@ RFI_CLOSED_STATUSES = (RFIStatus.CLOSED, RFIStatus.VOID)
 class RFICategory(StrEnum):
     """What the question is about. Drives filtering and the discipline it routes to."""
 
-    DESIGN = "design"                # a drawing is unclear or incomplete
-    STRUCTURAL = "structural"        # loads, foundations, steel
+    DESIGN = "design"  # a drawing is unclear or incomplete
+    STRUCTURAL = "structural"  # loads, foundations, steel
     ARCHITECTURAL = "architectural"  # layout, finishes, setting-out
-    MEP = "mep"                      # mechanical, electrical, plumbing
-    CIVILS = "civils"               # drainage, groundworks, roads
-    COORDINATION = "coordination"    # two trades or two drawings disagree
+    MEP = "mep"  # mechanical, electrical, plumbing
+    CIVILS = "civils"  # drainage, groundworks, roads
+    COORDINATION = "coordination"  # two trades or two drawings disagree
     SITE_CONDITION = "site_condition"  # what is in the ground differs from the drawing
-    MATERIALS = "materials"          # a specified product is unavailable or wrong
+    MATERIALS = "materials"  # a specified product is unavailable or wrong
     BUILDING_CONTROL = "building_control"  # a regs or warranty-inspector query
     OTHER = "other"
 
@@ -79,7 +80,7 @@ class SubmittalStatus(StrEnum):
     SUBMITTED = "submitted"
     UNDER_REVIEW = "under_review"
     APPROVED = "approved"
-    APPROVED_AS_NOTED = "approved_as_noted"   # usable, with corrections
+    APPROVED_AS_NOTED = "approved_as_noted"  # usable, with corrections
     REVISE_AND_RESUBMIT = "revise_and_resubmit"
     REJECTED = "rejected"
 
@@ -95,14 +96,14 @@ class SubmittalType(StrEnum):
     """What kind of thing is being put forward. Procore's standard submittal types,
     trimmed to what a housebuilder actually raises."""
 
-    PRODUCT_DATA = "product_data"        # a spec sheet for a named product
-    SHOP_DRAWING = "shop_drawing"        # a fabricator's drawing (trusses, steel, joinery)
-    SAMPLE = "sample"                    # a physical sample (tile, brick, worktop)
-    MOCK_UP = "mock_up"                  # a built sample panel
-    CERTIFICATE = "certificate"          # a test/compliance certificate
+    PRODUCT_DATA = "product_data"  # a spec sheet for a named product
+    SHOP_DRAWING = "shop_drawing"  # a fabricator's drawing (trusses, steel, joinery)
+    SAMPLE = "sample"  # a physical sample (tile, brick, worktop)
+    MOCK_UP = "mock_up"  # a built sample panel
+    CERTIFICATE = "certificate"  # a test/compliance certificate
     METHOD_STATEMENT = "method_statement"  # how a trade intends to do the work
-    O_AND_M = "o_and_m"                  # operation & maintenance manual
-    WARRANTY_DOC = "warranty_doc"        # a manufacturer warranty document
+    O_AND_M = "o_and_m"  # operation & maintenance manual
+    WARRANTY_DOC = "warranty_doc"  # a manufacturer warranty document
     OTHER = "other"
 
 
@@ -121,13 +122,13 @@ class MeetingStatus(StrEnum):
 class MeetingType(StrEnum):
     """What kind of meeting it is. Procore's standard set, trimmed to a housebuilder's."""
 
-    PRE_CONSTRUCTION = "pre_construction"   # kick-off before a start on site
-    COORDINATION = "coordination"           # the recurring trade coordination
-    OAC = "oac"                             # owner / architect / contractor
-    PROGRESS = "progress"                   # progress / site review
-    PRE_INSTALL = "pre_install"             # pre-installation for one trade
+    PRE_CONSTRUCTION = "pre_construction"  # kick-off before a start on site
+    COORDINATION = "coordination"  # the recurring trade coordination
+    OAC = "oac"  # owner / architect / contractor
+    PROGRESS = "progress"  # progress / site review
+    PRE_INSTALL = "pre_install"  # pre-installation for one trade
     SAFETY = "safety"
-    HANDOVER = "handover"                   # pre-completion / handover to the buyer
+    HANDOVER = "handover"  # pre-completion / handover to the buyer
     OTHER = "other"
 
 
@@ -140,6 +141,7 @@ class Priority(StrEnum):
 
 # ============================================================== RFIs =======
 
+
 class RFI(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """A formal question that blocks work until it is answered."""
 
@@ -148,8 +150,10 @@ class RFI(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     rfi_number: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     subject: Mapped[str] = mapped_column(String(300), nullable=False)
     question: Mapped[str] = mapped_column(String(4000), nullable=False)
@@ -265,6 +269,7 @@ class RFI(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 
 # ========================================================= submittals =====
+
 
 class Submittal(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """A product or material put forward for approval before it is installed.
@@ -418,6 +423,7 @@ class Submittal(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 # =========================================================== meetings =====
 
+
 class Meeting(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """An agenda that becomes minutes, and minutes that carry actions."""
 
@@ -479,8 +485,10 @@ class MeetingItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "meeting_items"
 
     meeting_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("meetings.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("meetings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sequence: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     topic: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -510,6 +518,7 @@ class MeetingItem(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
 
 # ===================================================== correspondence =====
+
 
 class Correspondence(UUIDMixin, TenantMixin, TimestampMixin, Base):
     """Anything said in writing that someone may need to produce later.

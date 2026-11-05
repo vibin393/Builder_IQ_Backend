@@ -28,8 +28,10 @@ class Budget(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("job_id", name="uq_budgets_job"),)
 
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[BudgetStatus] = mapped_column(
         Enum(BudgetStatus, name="budget_status", values_callable=lambda e: [m.value for m in e]),
@@ -60,12 +62,16 @@ class BudgetLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     budget_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("budgets.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("budgets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL")

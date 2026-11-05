@@ -42,8 +42,10 @@ class BidPackage(UUIDMixin, TenantMixin, TimestampMixin, Base):
     scope: Mapped[str | None] = mapped_column(String(4000))
 
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     # A package is priced against a plan (production) or a specific job (one-off).
     plan_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -166,12 +168,16 @@ class Bid(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (UniqueConstraint("package_id", "vendor_id", name="uq_bids_package_vendor"),)
 
     package_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("bid_packages.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("bid_packages.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[BidStatus] = mapped_column(
         Enum(BidStatus, name="bid_status", values_callable=lambda e: [m.value for m in e]),

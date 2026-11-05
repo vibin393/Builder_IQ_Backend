@@ -14,9 +14,7 @@ from app.models.purchase_order import PurchaseOrder
 
 
 async def next_job_number(db: AsyncSession, tenant_id: uuid.UUID) -> str:
-    count = await db.scalar(
-        select(func.count()).select_from(Job).where(Job.tenant_id == tenant_id)
-    )
+    count = await db.scalar(select(func.count()).select_from(Job).where(Job.tenant_id == tenant_id))
     return f"J{(count or 0) + 1:05d}"
 
 

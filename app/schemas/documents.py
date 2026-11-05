@@ -25,6 +25,7 @@ class DocumentCreate(BaseModel):
     community_id: uuid.UUID | None = None
     plan_id: uuid.UUID | None = None
     vendor_id: uuid.UUID | None = None
+    lead_id: uuid.UUID | None = None
     notes: str | None = None
 
 
@@ -38,6 +39,7 @@ class DocumentUpdate(BaseModel):
     community_id: uuid.UUID | None = None
     plan_id: uuid.UUID | None = None
     vendor_id: uuid.UUID | None = None
+    lead_id: uuid.UUID | None = None
     notes: str | None = None
 
 
@@ -72,6 +74,7 @@ class DocumentRead(ORMModel):
     community_id: uuid.UUID | None
     plan_id: uuid.UUID | None
     vendor_id: uuid.UUID | None
+    lead_id: uuid.UUID | None = None
     uploaded_by_id: uuid.UUID | None
     notes: str | None
     created_at: datetime
@@ -82,8 +85,8 @@ class DocumentRead(ORMModel):
 
 
 class DocumentSummary(BaseModel):
-    total: int               # live documents (excludes superseded / archived)
-    critical: int            # contracts, permits, waivers, warranties, insurance
+    total: int  # live documents (excludes superseded / archived)
+    critical: int  # contracts, permits, waivers, warranties, insurance
     not_tied_to_home: int
     expiring_soon: int
     expired: int

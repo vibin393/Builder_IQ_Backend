@@ -20,7 +20,7 @@ from app.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 class ChangeOrderStatus(StrEnum):
     DRAFT = "draft"
     PENDING_APPROVAL = "pending_approval"
-    APPROVED = "approved"       # cascaded into contract, budget and schedule
+    APPROVED = "approved"  # cascaded into contract, budget and schedule
     REJECTED = "rejected"
     VOID = "void"
 
@@ -28,9 +28,9 @@ class ChangeOrderStatus(StrEnum):
 class ResponsibleParty(StrEnum):
     """Who absorbs the cost. This is the margin question."""
 
-    BUYER = "buyer"        # billed on: price and cost both move
-    BUILDER = "builder"    # absorbed: cost moves, price does not
-    TRADE = "trade"        # backcharged: neither price nor budget should rise
+    BUYER = "buyer"  # billed on: price and cost both move
+    BUILDER = "builder"  # absorbed: cost moves, price does not
+    TRADE = "trade"  # backcharged: neither price nor budget should rise
 
 
 class ChangeOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
@@ -39,8 +39,10 @@ class ChangeOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     co_number: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[ChangeOrderStatus] = mapped_column(
         Enum(
@@ -64,6 +66,13 @@ class ChangeOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     description: Mapped[str] = mapped_column(String(2000), nullable=False)
     reason: Mapped[str | None] = mapped_column(String(500))
+
+    #: When the client is expected to respond. Used to flag a pending CO as overdue.
+    approval_deadline: Mapped[date | None] = mapped_column(Date)
+    #: Notes meant for the client — safe to show on a client-facing preview.
+    client_notes: Mapped[str | None] = mapped_column(String(2000))
+    #: Notes for the builder's own team. Never shown to the client.
+    internal_notes: Mapped[str | None] = mapped_column(String(2000))
 
     # What the buyer is charged. Zero for builder-absorbed and trade-backcharged work.
     price_delta: Mapped[Decimal] = mapped_column(
@@ -92,6 +101,15 @@ class ChangeOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
         """Positive means the change makes the builder money, negative means it costs."""
         return self.price_delta - self.cost_delta
 
+    @property
+    def approval_overdue(self) -> bool:
+        """A pending change order whose client-response deadline has passed."""
+        return bool(
+            self.status is ChangeOrderStatus.PENDING_APPROVAL
+            and self.approval_deadline is not None
+            and self.approval_deadline < date.today()
+        )
+
     def __repr__(self) -> str:
         return f"<ChangeOrder {self.co_number} {self.status}>"
 
@@ -102,12 +120,16 @@ class ChangeOrderLine(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "change_order_lines"
 
     change_order_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("change_orders.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("change_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     cost_code_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("cost_codes.id", ondelete="RESTRICT"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("cost_codes.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL")

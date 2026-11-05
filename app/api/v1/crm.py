@@ -106,9 +106,7 @@ async def lead_summary(db: DbSession, user: RequireStaff):
 
 
 @router.get("/leads/overdue", response_model=Page[LeadRead])
-async def overdue_leads(
-    db: DbSession, user: RequireStaff, params: PageQuery, filters: LeadFilters
-):
+async def overdue_leads(db: DbSession, user: RequireStaff, params: PageQuery, filters: LeadFilters):
     """The call list: open leads whose follow-up date has passed, worst first.
 
     Ordered by how long they have been neglected rather than by when they came
@@ -178,9 +176,7 @@ async def get_lead(lead_id: uuid.UUID, db: DbSession, user: RequireStaff):
 
 
 @router.patch("/leads/{lead_id}", response_model=LeadDetail)
-async def update_lead(
-    lead_id: uuid.UUID, payload: LeadUpdate, db: DbSession, user: RequireSales
-):
+async def update_lead(lead_id: uuid.UUID, payload: LeadUpdate, db: DbSession, user: RequireSales):
     """Edit a lead's details. Only the fields supplied change.
 
     Status is not settable here - it moves through /status, which checks the
@@ -268,9 +264,7 @@ async def schedule_follow_up(
 
 
 @router.post("/leads/{lead_id}/rating", response_model=LeadDetail)
-async def set_rating(
-    lead_id: uuid.UUID, payload: RatingRequest, db: DbSession, user: RequireSales
-):
+async def set_rating(lead_id: uuid.UUID, payload: RatingRequest, db: DbSession, user: RequireSales):
     """Hot, warm or cold - the salesperson's read on whether this will close."""
     return await CrmService(db, user.tenant_id).set_rating(
         lead_id, payload.rating, actor_id=user.id
@@ -298,9 +292,7 @@ async def reopen_lead(
 ):
     """Bring a lost lead back. Returns to contacted, not new - somebody has
     already spoken to them and the queues should not pretend otherwise."""
-    return await CrmService(db, user.tenant_id).reopen(
-        lead_id, actor_id=user.id, note=payload.note
-    )
+    return await CrmService(db, user.tenant_id).reopen(lead_id, actor_id=user.id, note=payload.note)
 
 
 @router.post("/leads/{lead_id}/convert", response_model=LeadDetail)
@@ -420,9 +412,7 @@ async def archive_realtor(
     from deleting. Refused while they hold open leads, because there is a
     commission riding on each one.
     """
-    return await CrmService(db, user.tenant_id).archive_realtor(
-        realtor_id, user.id, payload.reason
-    )
+    return await CrmService(db, user.tenant_id).archive_realtor(realtor_id, user.id, payload.reason)
 
 
 @router.post("/realtors/{realtor_id}/restore", response_model=RealtorRead)

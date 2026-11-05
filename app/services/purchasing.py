@@ -15,6 +15,8 @@ system, and then there is no record of the decision at all. An override here is
 a recorded act; a purchase order raised in a spreadsheet is not.
 """
 
+from __future__ import annotations
+
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -128,9 +130,7 @@ class PurchasingService:
         await self.orders.commit()
         return await self.orders.get(po.id)
 
-    async def update_draft(
-        self, po_id: uuid.UUID, *, fields: dict, lines=None
-    ) -> PurchaseOrder:
+    async def update_draft(self, po_id: uuid.UUID, *, fields: dict, lines=None) -> PurchaseOrder:
         """Edit a draft. Issued POs are never edited — a change order supersedes them."""
         po = await self.orders.get(po_id)
         if po.status is not PurchaseOrderStatus.DRAFT:
@@ -258,9 +258,7 @@ class PurchasingService:
         summary = await job_cost_service.job_cost_summary(self.db, self.tenant_id, po.job_id)
         remaining = {line["cost_code_id"]: line["uncommitted"] for line in summary["lines"]}
 
-        breaches = [
-            line for line in po.lines if line.amount > remaining.get(line.cost_code_id, 0)
-        ]
+        breaches = [line for line in po.lines if line.amount > remaining.get(line.cost_code_id, 0)]
         if not breaches:
             return None
         return BusinessRuleViolation(

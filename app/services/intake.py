@@ -268,17 +268,13 @@ class IntakeService:
             )
 
         lead = await self._create(source, draft)
-        return await self._finish(
-            source, event, IntakeStatus.ACCEPTED, None, lead_id=lead.id
-        )
+        return await self._finish(source, event, IntakeStatus.ACCEPTED, None, lead_id=lead.id)
 
     def _read(self, source: IntakeSource, payload: dict) -> LeadDraft:
         """Spam checks, then the channel's adapter."""
         trap = source.honeypot_field
         if trap and str(payload.get(trap) or "").strip():
-            raise SpamRejected(
-                f"The honeypot field {trap!r} was filled in, which only a bot does."
-            )
+            raise SpamRejected(f"The honeypot field {trap!r} was filled in, which only a bot does.")
         return parse(IntakeKind(source.kind), payload, source.field_map)
 
     async def _same_person(self, draft: LeadDraft) -> Lead | None:
@@ -293,9 +289,7 @@ class IntakeService:
         )
         return matches[0] if matches else None
 
-    async def _note_repeat(
-        self, lead: Lead, source: IntakeSource, draft: LeadDraft
-    ) -> None:
+    async def _note_repeat(self, lead: Lead, source: IntakeSource, draft: LeadDraft) -> None:
         """Record that they enquired again, on the lead they already have.
 
         A repeat enquiry is not noise - it is the strongest buying signal a lead
@@ -435,7 +429,9 @@ class IntakeService:
         if existing is not None:
             await self._note_repeat(existing, source, draft)
             return await self._finish(
-                source, event, IntakeStatus.DUPLICATE,
+                source,
+                event,
+                IntakeStatus.DUPLICATE,
                 f"Matched the existing lead for {existing.full_name}.",
                 lead_id=existing.id,
             )
@@ -445,9 +441,7 @@ class IntakeService:
         # what needed a human and what did not.
         if source.failed_count > 0:
             source.failed_count -= 1
-        return await self._finish(
-            source, event, IntakeStatus.REPLAYED, None, lead_id=lead.id
-        )
+        return await self._finish(source, event, IntakeStatus.REPLAYED, None, lead_id=lead.id)
 
     async def health(self) -> dict:
         """Is every channel still delivering.

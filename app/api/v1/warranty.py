@@ -85,14 +85,10 @@ async def _load_request(db, tenant_id: uuid.UUID, req_id: uuid.UUID) -> Warranty
 
 async def _load_order(db, tenant_id: uuid.UUID, order_id: uuid.UUID) -> ServiceOrder:
     order = await db.scalar(
-        select(ServiceOrder).where(
-            ServiceOrder.id == order_id, ServiceOrder.tenant_id == tenant_id
-        )
+        select(ServiceOrder).where(ServiceOrder.id == order_id, ServiceOrder.tenant_id == tenant_id)
     )
     if order is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Service order not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Service order not found")
     return order
 
 
@@ -111,9 +107,7 @@ async def summary(
     today = date.today()
 
     requests = list(
-        await db.scalars(
-            select(WarrantyRequest).where(WarrantyRequest.tenant_id == tenant)
-        )
+        await db.scalars(select(WarrantyRequest).where(WarrantyRequest.tenant_id == tenant))
     )
 
     by_status: dict[str, int] = {}
@@ -152,9 +146,7 @@ async def summary(
         .select_from(ServiceOrder)
         .where(
             ServiceOrder.tenant_id == tenant,
-            ServiceOrder.status.in_(
-                (ServiceOrderStatus.ASSIGNED, ServiceOrderStatus.SCHEDULED)
-            ),
+            ServiceOrder.status.in_((ServiceOrderStatus.ASSIGNED, ServiceOrderStatus.SCHEDULED)),
         )
     )
     back_charge_total = await db.scalar(
@@ -290,9 +282,7 @@ async def list_requests(
     return list(rows)
 
 
-@router.post(
-    "/requests", response_model=WarrantyRequestRead, status_code=status.HTTP_201_CREATED
-)
+@router.post("/requests", response_model=WarrantyRequestRead, status_code=status.HTTP_201_CREATED)
 async def create_request(payload: WarrantyRequestCreate, db: DbSession, user: RequireStaff):
     """Raise a warranty claim on a home. The buyer on the contract is attached
     automatically, and the SLA response clock starts from today by priority."""
@@ -344,9 +334,7 @@ async def update_request(
 
 
 @router.post("/requests/{request_id}/acknowledge", response_model=WarrantyRequestRead)
-async def acknowledge_request(
-    request_id: uuid.UUID, db: DbSession, user: RequireWarranty
-):
+async def acknowledge_request(request_id: uuid.UUID, db: DbSession, user: RequireWarranty):
     """Customer care has responded. Records the date the SLA is judged against."""
     req = await _load_request(db, user.tenant_id, request_id)
     if req.status in CLOSED_STATUSES:
@@ -477,9 +465,7 @@ async def complete_service_order(
 
 
 @router.post("/service-orders/{order_id}/cancel", response_model=ServiceOrderRead)
-async def cancel_service_order(
-    order_id: uuid.UUID, db: DbSession, user: RequireWarranty
-):
+async def cancel_service_order(order_id: uuid.UUID, db: DbSession, user: RequireWarranty):
     order = await _load_order(db, user.tenant_id, order_id)
     if order.status is ServiceOrderStatus.COMPLETE:
         raise HTTPException(
@@ -510,14 +496,12 @@ async def book_appointment(
     if payload.assignee_id:
         await get_tenant_scoped(db, User, user.tenant_id, payload.assignee_id)
 
-    appt = WarrantyAppointment(
-        tenant_id=user.tenant_id, request_id=req.id, **payload.model_dump()
-    )
+    appt = WarrantyAppointment(tenant_id=user.tenant_id, request_id=req.id, **payload.model_dump())
     db.add(appt)
 
-    if (
-        payload.kind is AppointmentKind.SERVICE_VISIT
-        and req.status in (WarrantyStatus.ACKNOWLEDGED, WarrantyStatus.TRIAGED)
+    if payload.kind is AppointmentKind.SERVICE_VISIT and req.status in (
+        WarrantyStatus.ACKNOWLEDGED,
+        WarrantyStatus.TRIAGED,
     ):
         req.status = WarrantyStatus.IN_PROGRESS
 
@@ -560,9 +544,7 @@ async def list_notes(request_id: uuid.UUID, db: DbSession, user: RequireStaff):
     response_model=NoteRead,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_note(
-    request_id: uuid.UUID, payload: NoteCreate, db: DbSession, user: RequireStaff
-):
+async def add_note(request_id: uuid.UUID, payload: NoteCreate, db: DbSession, user: RequireStaff):
     """Add to the claim's activity log. Homeowner-visible notes surface in the portal."""
     req = await _load_request(db, user.tenant_id, request_id)
     note = WarrantyNote(

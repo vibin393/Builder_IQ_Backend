@@ -26,17 +26,17 @@ class UserRole(StrEnum):
     # --- internal: the builder's own staff ---------------------------------
     OWNER = "owner"
     ADMIN = "admin"
-    EXECUTIVE = "executive"            # reads everything, changes nothing
+    EXECUTIVE = "executive"  # reads everything, changes nothing
     SALES = "sales"
     PURCHASING = "purchasing"
-    ACCOUNTING = "accounting"          # AP, invoices, GL export
+    ACCOUNTING = "accounting"  # AP, invoices, GL export
     SUPERINTENDENT = "superintendent"
-    WARRANTY = "warranty"              # customer care after handover
+    WARRANTY = "warranty"  # customer care after handover
 
     # --- external: they work with you, not for you -------------------------
-    ARCHITECT = "architect"            # answers RFIs, reviews submittals
-    TRADE = "trade"                    # subcontractor; sees only their own work
-    HOMEOWNER = "homeowner"            # the buyer; sees only their own home
+    ARCHITECT = "architect"  # answers RFIs, reviews submittals
+    TRADE = "trade"  # subcontractor; sees only their own work
+    HOMEOWNER = "homeowner"  # the buyer; sees only their own home
 
 
 # Anyone the builder does not employ. They share the tenant but must never see

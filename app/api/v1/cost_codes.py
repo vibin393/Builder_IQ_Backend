@@ -47,9 +47,9 @@ class CostCodeSummary(BaseModel):
     active: int
     inactive: int
     archived: int
-    unmapped: int                   # no nominal code in the ledger
-    unused: int                     # active, and nothing has ever landed on it
-    over_budget: int                # committed or actual above the revised budget
+    unmapped: int  # no nominal code in the ledger
+    unused: int  # active, and nothing has ever landed on it
+    over_budget: int  # committed or actual above the revised budget
     by_division: dict[str, int]
     by_type: dict[str, int]
 
@@ -68,7 +68,7 @@ class ImportRequest(BaseModel):
 
 class ImportResult(BaseModel):
     created: int
-    skipped: list[str]              # codes that already existed
+    skipped: list[str]  # codes that already existed
 
 
 class UsageRow(BaseModel):
@@ -186,9 +186,13 @@ async def import_cost_codes(payload: ImportRequest, db: DbSession, admin: Requir
         existing.add(code.upper())
         db.add(
             CostCode(
-                tenant_id=admin.tenant_id, code=code, name=row.name.strip(),
-                division=(row.division or "").strip() or None, cost_type=row.cost_type,
-                gl_account=(row.gl_account or "").strip() or None, created_by_id=admin.id,
+                tenant_id=admin.tenant_id,
+                code=code,
+                name=row.name.strip(),
+                division=(row.division or "").strip() or None,
+                cost_type=row.cost_type,
+                gl_account=(row.gl_account or "").strip() or None,
+                created_by_id=admin.id,
             )
         )
         created += 1
@@ -215,9 +219,9 @@ async def cost_code_usage(code_id: uuid.UUID, db: DbSession, user: RequireStaff)
         (VendorSpecialism, "Trades that do it"),
     ):
         n = await db.scalar(
-            select(func.count()).select_from(model).where(
-                model.tenant_id == user.tenant_id, model.cost_code_id == code_id
-            )
+            select(func.count())
+            .select_from(model)
+            .where(model.tenant_id == user.tenant_id, model.cost_code_id == code_id)
         )
         if n:
             out.append(UsageRow(where=label, count=n))

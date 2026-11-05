@@ -71,8 +71,11 @@ def _read(p: LandProject) -> LandProjectRead:
     r = LandProjectRead.model_validate(p)
     r.obligations = sorted(
         r.obligations,
-        key=lambda o: (o.status not in OPEN_OBLIGATIONS, not o.pre_commencement,
-                       o.due_date or date.max),
+        key=lambda o: (
+            o.status not in OPEN_OBLIGATIONS,
+            not o.pre_commencement,
+            o.due_date or date.max,
+        ),
     )
     return r
 
@@ -134,7 +137,8 @@ async def land_summary(db: DbSession, user: RequireStaff):
         planned_plots=sum(p.planned_lots or 0 for p in projects),
         delivered_plots=sum(p.delivered_lots for p in projects),
         consents_expiring=sum(
-            1 for p in projects
+            1
+            for p in projects
             if p.status is not LandPhaseStatus.COMPLETE
             and p.days_to_consent_expiry is not None
             and p.days_to_consent_expiry <= 180
@@ -213,9 +217,7 @@ async def update_land_project(
                 "Works cannot start without a buildable permission - full planning, or "
                 "reserved matters approved."
             )
-        blocking = [
-            o for o in p.obligations if o.pre_commencement and o.status in OPEN_OBLIGATIONS
-        ]
+        blocking = [o for o in p.obligations if o.pre_commencement and o.status in OPEN_OBLIGATIONS]
         if blocking:
             refs = ", ".join(o.reference or o.description[:30] for o in blocking[:4])
             raise _conflict(
@@ -226,8 +228,11 @@ async def update_land_project(
         data.setdefault("start_date", p.start_date or date.today())
 
     for key, value in data.items():
-        if key in ("code", "name", "status", "delivered_lots", "acquisition_cost",
-                   "planning_status") and value is None:
+        if (
+            key
+            in ("code", "name", "status", "delivered_lots", "acquisition_cost", "planning_status")
+            and value is None
+        ):
             continue
         setattr(p, key, value)
     await db.commit()
@@ -266,8 +271,12 @@ async def deliver_plots(
             continue
         db.add(
             Lot(
-                tenant_id=admin.tenant_id, community_id=p.community_id, lot_number=number,
-                status=LotStatus.NOT_RELEASED, phase_id=payload.phase_id, premium=payload.premium,
+                tenant_id=admin.tenant_id,
+                community_id=p.community_id,
+                lot_number=number,
+                status=LotStatus.NOT_RELEASED,
+                phase_id=payload.phase_id,
+                premium=payload.premium,
             )
         )
         created += 1
@@ -419,4 +428,3 @@ async def delete_obligation(obligation_id: uuid.UUID, db: DbSession, admin: Requ
     o = await _obligation(db, admin.tenant_id, obligation_id)
     await db.delete(o)
     await db.commit()
-

@@ -55,7 +55,7 @@ class ExportQueue(BaseModel):
 
 class BatchCreate(BaseModel):
     kind: ExportKind
-    through_date: date | None = None   # blank: everything ready up to today
+    through_date: date | None = None  # blank: everything ready up to today
     notes: str | None = Field(default=None, max_length=500)
 
 
@@ -102,14 +102,14 @@ class ReadyCount(BaseModel):
 
 
 class AccountingSummary(BaseModel):
-    ready: dict[str, ReadyCount]          # by export kind
-    waiting: int                          # payments / releases held behind their invoice
-    unposted_batches: int                 # exported, not yet confirmed in the ledger
+    ready: dict[str, ReadyCount]  # by export kind
+    waiting: int  # payments / releases held behind their invoice
+    unposted_batches: int  # exported, not yet confirmed in the ledger
     last_export_on: date | None
     exported_this_month: Money
     unmapped_cost_codes: int
-    open_commitments: Money               # committed on POs, not yet invoiced
-    cis_this_period: Money                # deducted in the current CIS tax month
+    open_commitments: Money  # committed on POs, not yet invoiced
+    cis_this_period: Money  # deducted in the current CIS tax month
     locked_through: date | None
 
 
@@ -157,7 +157,7 @@ class CISReturnRow(BaseModel):
     utr: str | None
     cis_status: str | None
     payments: int
-    gross_paid: Money        # paid before the deduction, retention excluded
+    gross_paid: Money  # paid before the deduction, retention excluded
     materials: Money
     labour: Money
     deducted: Money
@@ -166,9 +166,9 @@ class CISReturnRow(BaseModel):
 
 
 class CISReturn(BaseModel):
-    period_start: date       # the 6th
-    period_end: date         # the 5th of the next month
-    due_date: date           # the 19th after the period ends
+    period_start: date  # the 6th
+    period_end: date  # the 5th of the next month
+    due_date: date  # the 19th after the period ends
     rows: list[CISReturnRow]
     gross_paid: Money
     materials: Money

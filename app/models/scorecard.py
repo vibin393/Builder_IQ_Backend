@@ -36,10 +36,12 @@ class ScorecardSnapshot(UUIDMixin, TenantMixin, TimestampMixin, Base):
     )
 
     vendor_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    period: Mapped[date] = mapped_column(Date, nullable=False)   # first of the month
+    period: Mapped[date] = mapped_column(Date, nullable=False)  # first of the month
     overall: Mapped[int | None] = mapped_column(Integer)
     #: {"schedule": 82, "quality": null, ...}
     dimensions: Mapped[dict] = mapped_column(JSON, nullable=False)

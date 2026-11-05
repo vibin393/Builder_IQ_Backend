@@ -101,7 +101,7 @@ class BidSummary(BaseModel):
     cancelled: int
     overdue: int
     invited: int
-    submitted: int             # bids that came back with a price
+    submitted: int  # bids that came back with a price
     response_rate: float | None
-    awarded_value: Money       # total value of awarded bids
-    savings: Money             # total estimate-minus-awarded across awarded packages
+    awarded_value: Money  # total value of awarded bids
+    savings: Money  # total estimate-minus-awarded across awarded packages

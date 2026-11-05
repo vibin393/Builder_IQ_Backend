@@ -159,12 +159,12 @@ class RFISummary(BaseModel):
     closed: int
     overdue: int
     blocking: int
-    in_our_court: int          # open, ball with the builder — we owe the answer
-    unassigned: int            # open, no trade or court owner beyond the builder
+    in_our_court: int  # open, ball with the builder — we owe the answer
+    unassigned: int  # open, no trade or court owner beyond the builder
     due_this_week: int
     avg_response_days: float | None
     by_status: dict[str, int]
     by_court: dict[str, int]
     by_category: dict[str, int]
     by_priority: dict[str, int]
-    aging: dict[str, int]      # open RFIs bucketed by days open
+    aging: dict[str, int]  # open RFIs bucketed by days open

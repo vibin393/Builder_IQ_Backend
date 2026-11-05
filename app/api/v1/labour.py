@@ -119,9 +119,7 @@ async def log_hours(payload: TimecardCreate, db: DbSession, user: RequireStaff):
 
     Leave the rate off and the trade's standard rate is used.
     """
-    return await LabourService(db, user.tenant_id).record(
-        actor_id=user.id, **payload.model_dump()
-    )
+    return await LabourService(db, user.tenant_id).record(actor_id=user.id, **payload.model_dump())
 
 
 @router.patch("/{card_id}", response_model=TimecardRead)

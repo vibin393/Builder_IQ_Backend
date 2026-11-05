@@ -49,6 +49,7 @@ class ORMModel(BaseModel):
 
 # ==================================================== safety, quality =====
 
+
 class ObservationCreate(BaseModel):
     job_id: uuid.UUID
     title: str = Field(min_length=1, max_length=300)
@@ -163,6 +164,7 @@ class ActionPlanRead(ORMModel):
 
 
 # ========================================================== timecards =====
+
 
 class TimecardCreate(BaseModel):
     job_id: uuid.UUID

@@ -494,9 +494,7 @@ async def send_transmittal(payload: TransmittalCreate, db: DbSession, user: Requ
 
     for vid in vendor_ids:
         await get_tenant_scoped(db, Vendor, user.tenant_id, vid)
-        db.add(
-            TransmittalRecipient(tenant_id=user.tenant_id, transmittal_id=obj.id, vendor_id=vid)
-        )
+        db.add(TransmittalRecipient(tenant_id=user.tenant_id, transmittal_id=obj.id, vendor_id=vid))
 
     await db.commit()
     return await _load_transmittal(db, user.tenant_id, obj.id)

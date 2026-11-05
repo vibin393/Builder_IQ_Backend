@@ -306,8 +306,7 @@ async def update_community(
         if new_status is CommunityStatus.CLOSED:
             jobs = await _live_jobs(db, admin.tenant_id)
             building = sum(
-                1 for lot in lots
-                if lot.id in jobs and jobs[lot.id].status in LIVE_STATUSES
+                1 for lot in lots if lot.id in jobs and jobs[lot.id].status in LIVE_STATUSES
             )
             if building:
                 raise _conflict(
@@ -374,8 +373,12 @@ async def create_phase(
         )
         sequence = (top or 0) + 1
     phase = CommunityPhase(
-        tenant_id=admin.tenant_id, community_id=community_id, name=name, sequence=sequence,
-        planned_release=payload.planned_release, notes=payload.notes,
+        tenant_id=admin.tenant_id,
+        community_id=community_id,
+        name=name,
+        sequence=sequence,
+        planned_release=payload.planned_release,
+        notes=payload.notes,
     )
     db.add(phase)
     await db.commit()
@@ -461,10 +464,15 @@ async def community_plans(community_id: uuid.UUID, db: DbSession, user: RequireS
             continue
         out.append(
             CommunityPlanRead(
-                plan_id=p.id, code=p.code, name=p.name, bedrooms=p.bedrooms,
-                plan_base_price=p.base_price, base_price=o.base_price,
+                plan_id=p.id,
+                code=p.code,
+                name=p.name,
+                bedrooms=p.bedrooms,
+                plan_base_price=p.base_price,
+                base_price=o.base_price,
                 effective_price=o.base_price if o.base_price is not None else p.base_price,
-                is_active=o.is_active, homes=homes.get(p.id, 0),
+                is_active=o.is_active,
+                homes=homes.get(p.id, 0),
             )
         )
     return sorted(out, key=lambda r: r.code)
@@ -505,8 +513,11 @@ async def remove_community_plan(
     withdraw it from sale instead, which keeps the record."""
     await _community(db, admin.tenant_id, community_id)
     building = await db.scalar(
-        select(func.count()).select_from(Job).where(
-            Job.community_id == community_id, Job.plan_id == plan_id,
+        select(func.count())
+        .select_from(Job)
+        .where(
+            Job.community_id == community_id,
+            Job.plan_id == plan_id,
             Job.status.in_(LIVE_STATUSES),
         )
     )
@@ -532,10 +543,7 @@ async def _lot_reads(db, tenant_id: uuid.UUID, lots: list[Lot]) -> list[LotRead]
     jobs = await _live_jobs(db, tenant_id)
     lead_ids = {lot.held_for_lead_id for lot in lots if lot.held_for_lead_id}
     leads = (
-        {
-            lead.id: lead
-            for lead in await db.scalars(select(Lead).where(Lead.id.in_(lead_ids)))
-        }
+        {lead.id: lead for lead in await db.scalars(select(Lead).where(Lead.id.in_(lead_ids)))}
         if lead_ids
         else {}
     )
@@ -657,8 +665,12 @@ async def bulk_create_lots(
             continue
         db.add(
             Lot(
-                tenant_id=admin.tenant_id, community_id=community_id, lot_number=number,
-                status=payload.status, phase_id=payload.phase_id, premium=payload.premium,
+                tenant_id=admin.tenant_id,
+                community_id=community_id,
+                lot_number=number,
+                status=payload.status,
+                phase_id=payload.phase_id,
+                premium=payload.premium,
                 postcode=postcode,
                 released_on=today if payload.status is LotStatus.AVAILABLE else None,
             )

@@ -94,9 +94,7 @@ class IntakeSource(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, Audi
     """One configured channel that leads arrive through."""
 
     __tablename__ = "intake_sources"
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "code", name="uq_intake_sources_tenant_code"),
-    )
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_intake_sources_tenant_code"),)
 
     code: Mapped[str] = mapped_column(String(48), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -105,9 +103,7 @@ class IntakeSource(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, Audi
     # a value removed and needs a migration outside a transaction to gain one.
     # The set of lead statuses is a business rule; the set of connectors is a
     # backlog.
-    kind: Mapped[IntakeKind] = mapped_column(
-        String(32), nullable=False, index=True
-    )
+    kind: Mapped[IntakeKind] = mapped_column(String(32), nullable=False, index=True)
 
     #: SHA-256 of the key. The key itself is shown once at creation and never
     #: again - if it is lost, it is rotated, not recovered.
@@ -120,9 +116,7 @@ class IntakeSource(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, Audi
     #: channels that authenticate with the key alone.
     signing_secret: Mapped[str | None] = mapped_column(String(200))
 
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False, index=True
-    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
     # -- what the channel cannot tell us --------------------------------------
     # A website form knows nothing about communities or campaigns. These fill the
@@ -153,9 +147,7 @@ class IntakeSource(UUIDMixin, TenantMixin, TimestampMixin, ArchivableMixin, Audi
 
     #: Most requests per minute from one caller. An unauthenticated endpoint on
     #: the public internet will be found; this is what stops it being a hole.
-    rate_limit_per_minute: Mapped[int] = mapped_column(
-        Integer, default=30, nullable=False
-    )
+    rate_limit_per_minute: Mapped[int] = mapped_column(Integer, default=30, nullable=False)
 
     # -- observability --------------------------------------------------------
     # Kept on the source so "has the website form gone quiet" is answerable at a

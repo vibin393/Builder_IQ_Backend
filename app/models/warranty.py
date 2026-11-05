@@ -31,13 +31,13 @@ from app.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 
 class WarrantyStatus(StrEnum):
-    SUBMITTED = "submitted"         # logged, not yet looked at
-    ACKNOWLEDGED = "acknowledged"   # customer care has responded, SLA clock set
-    TRIAGED = "triaged"             # assessed and work dispatched
-    IN_PROGRESS = "in_progress"     # a trade is actively working it
-    RESOLVED = "resolved"           # work done, awaiting close-out
-    CLOSED = "closed"               # signed off, homeowner satisfied
-    DECLINED = "declined"           # outside warranty coverage
+    SUBMITTED = "submitted"  # logged, not yet looked at
+    ACKNOWLEDGED = "acknowledged"  # customer care has responded, SLA clock set
+    TRIAGED = "triaged"  # assessed and work dispatched
+    IN_PROGRESS = "in_progress"  # a trade is actively working it
+    RESOLVED = "resolved"  # work done, awaiting close-out
+    CLOSED = "closed"  # signed off, homeowner satisfied
+    DECLINED = "declined"  # outside warranty coverage
 
 
 #: Statuses that no longer count against the open/overdue queues.
@@ -52,7 +52,7 @@ class ServiceOrderStatus(StrEnum):
 
 
 class Priority(StrEnum):
-    EMERGENCY = "emergency"     # habitability: no heat, no water, leak
+    EMERGENCY = "emergency"  # habitability: no heat, no water, leak
     HIGH = "high"
     NORMAL = "normal"
     LOW = "low"
@@ -61,18 +61,18 @@ class Priority(StrEnum):
 class WarrantyCategory(StrEnum):
     """The building element at fault. Drives both coverage and the callback report."""
 
-    STRUCTURAL = "structural"      # foundations, load-bearing - the 10-year cover
+    STRUCTURAL = "structural"  # foundations, load-bearing - the 10-year cover
     ROOFING = "roofing"
     PLUMBING = "plumbing"
     ELECTRICAL = "electrical"
-    HEATING = "heating"            # boiler, radiators, underfloor
-    EXTERIOR = "exterior"          # render, brickwork, windows, doors
-    INTERIOR = "interior"          # plaster, decoration, flooring
-    JOINERY = "joinery"            # kitchens, wardrobes, internal doors
+    HEATING = "heating"  # boiler, radiators, underfloor
+    EXTERIOR = "exterior"  # render, brickwork, windows, doors
+    INTERIOR = "interior"  # plaster, decoration, flooring
+    JOINERY = "joinery"  # kitchens, wardrobes, internal doors
     APPLIANCE = "appliance"
-    DAMP = "damp"                  # damp, condensation, water ingress
+    DAMP = "damp"  # damp, condensation, water ingress
     DRAINAGE = "drainage"
-    LANDSCAPING = "landscaping"    # driveways, paths, fencing, turf
+    LANDSCAPING = "landscaping"  # driveways, paths, fencing, turf
     OTHER = "other"
 
 
@@ -82,29 +82,29 @@ STRUCTURAL_CATEGORIES = (WarrantyCategory.STRUCTURAL,)
 
 
 class CoverageStatus(StrEnum):
-    PENDING = "pending"                  # not yet assessed
-    IN_WARRANTY = "in_warranty"          # builder's responsibility, no charge to owner
+    PENDING = "pending"  # not yet assessed
+    IN_WARRANTY = "in_warranty"  # builder's responsibility, no charge to owner
     OUT_OF_WARRANTY = "out_of_warranty"  # expired or excluded
-    GOODWILL = "goodwill"                # out of cover, but done anyway
+    GOODWILL = "goodwill"  # out of cover, but done anyway
 
 
 class AppointmentKind(StrEnum):
-    ASSESSMENT = "assessment"      # someone comes to look before dispatching
+    ASSESSMENT = "assessment"  # someone comes to look before dispatching
     SERVICE_VISIT = "service_visit"  # a trade attends to do the work
-    INSPECTION = "inspection"      # scheduled warranty inspection (e.g. end of defects period)
-    FOLLOW_UP = "follow_up"        # a return visit to confirm the fix held
+    INSPECTION = "inspection"  # scheduled warranty inspection (e.g. end of defects period)
+    FOLLOW_UP = "follow_up"  # a return visit to confirm the fix held
 
 
 class AppointmentStatus(StrEnum):
     SCHEDULED = "scheduled"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
-    NO_SHOW = "no_show"            # homeowner not in - a real, countable cost
+    NO_SHOW = "no_show"  # homeowner not in - a real, countable cost
 
 
 class NoteVisibility(StrEnum):
-    INTERNAL = "internal"          # staff-only working notes
-    HOMEOWNER = "homeowner"        # visible to the homeowner in the portal
+    INTERNAL = "internal"  # staff-only working notes
+    HOMEOWNER = "homeowner"  # visible to the homeowner in the portal
 
 
 def _enum(enum_cls, name):
@@ -119,8 +119,10 @@ class WarrantyRequest(UUIDMixin, TenantMixin, TimestampMixin, Base):
 
     request_number: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     buyer_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("buyers.id", ondelete="SET NULL")
@@ -169,11 +171,15 @@ class WarrantyRequest(UUIDMixin, TenantMixin, TimestampMixin, Base):
         back_populates="request", cascade="all, delete-orphan", lazy="selectin"
     )
     appointments: Mapped[list["WarrantyAppointment"]] = relationship(
-        back_populates="request", cascade="all, delete-orphan", lazy="selectin",
+        back_populates="request",
+        cascade="all, delete-orphan",
+        lazy="selectin",
         order_by="WarrantyAppointment.scheduled_for",
     )
     notes: Mapped[list["WarrantyNote"]] = relationship(
-        back_populates="request", cascade="all, delete-orphan", lazy="selectin",
+        back_populates="request",
+        cascade="all, delete-orphan",
+        lazy="selectin",
         order_by="WarrantyNote.created_at.desc()",
     )
 
@@ -195,8 +201,10 @@ class ServiceOrder(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "service_orders"
 
     request_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("warranty_requests.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("warranty_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL"), index=True
@@ -231,8 +239,10 @@ class WarrantyAppointment(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "warranty_appointments"
 
     request_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("warranty_requests.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("warranty_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     kind: Mapped[AppointmentKind] = mapped_column(
         _enum(AppointmentKind, "warranty_appointment_kind"),
@@ -268,8 +278,10 @@ class WarrantyNote(UUIDMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "warranty_notes"
 
     request_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("warranty_requests.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Uuid(as_uuid=True),
+        ForeignKey("warranty_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     author_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")

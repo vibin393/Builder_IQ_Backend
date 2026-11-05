@@ -40,3 +40,8 @@ postgres-data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local credential notes — NEVER commit
+cred
+cred.*
+credentials*
