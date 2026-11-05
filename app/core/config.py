@@ -29,7 +29,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://corman:corman@localhost:5432/corman_pmt"
+    # No default: the connection string contains credentials, so it must be
+    # provided at runtime via the DATABASE_URL environment variable (or .env) and
+    # is never hard-coded here. See .env.example for the expected format.
+    DATABASE_URL: str
 
     # CORS
     # NoDecode: keep the raw string so the validator below can split on commas.

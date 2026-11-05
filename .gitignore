@@ -45,3 +45,9 @@ Thumbs.db
 cred
 cred.*
 credentials*
+
+# Excluded from GitHub/SonarQube push (demo seed scripts with sample creds, and project toml)
+scripts/seed_*.py
+scripts/topup_demo_leads.py
+pyproject.toml
+scripts/demo_seed.py
